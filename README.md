@@ -95,7 +95,7 @@ git push origin feature/your-thing
 # open a PR
 ```
 
-Wallpapers for `/walls`, tools, fixes, cleanup — all welcome.
+Wallpapers for [walls](https://github.com/realv1sta/larphub/tree/main/walls), tools, fixes, cleanup — all welcome.
 
 <br>
 
