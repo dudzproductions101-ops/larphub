@@ -91,6 +91,6 @@ Wallpapers for [walls](https://github.com/realv1sta/larphub/tree/main/walls), to
 
 <div align="center">
 
-**Made with 🖤 by the `chmod +x larp` community**
+**Made with 🩷 by the `chmod +x larp` community**
 
 </div>
