@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="./og" alt="chmod +x larp banner" width="100%" />
+<img src="./og" alt="og larp" width="100%" />
 
 # LarpHub
 
@@ -85,7 +85,7 @@ git push origin feature/your-thing
 # open a PR
 ```
 
-Wallpapers for [walls](https://github.com/realv1sta/larphub/tree/main/walls), tools, fixes, cleanup — all welcome.
+New [walls](https://github.com/realv1sta/larphub/tree/main/walls), tools, fixes, cleanups are all welcome.
 
 <br>
 
