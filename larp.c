@@ -14,7 +14,6 @@ int main(void) {
     
     printf("\nbtw %s", name);
     usleep(500000);
-    
     for(int i = 0; i < 6; i += 2) {
         fflush(stdout);
         usleep(250000);
