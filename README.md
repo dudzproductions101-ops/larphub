@@ -15,7 +15,7 @@
 
 <p>
   <a href="#-about">About</a> •
-  <a href="#-join-us">Join Us</a> •
+  <a href="https://discord.gg/XzjNfhehKj">Join Us</a> •
   <a href="#-repo-layout">Repo Layout</a> •
   <a href="#-hall-of-fame">Hall of Fame</a> •
   <a href="#-contributors">Contributors</a> •
@@ -45,16 +45,6 @@
 **`chmod +x larp`** is a Discord community for LARP culture, hacker energy, and everything that lives in between. This repo is the community's public home base — assets, community-made drops, and the occasional in-joke you'll only get once you're actually in the server.
 
 New here? Welcome. Not in the server yet? That's step one.
-
-<br>
-
-## 💬 Join Us
-
-<div align="center">
-
-### **[→ discord.gg/XzjNfhehKj](https://discord.gg/XzjNfhehKj)**
-
-</div>
 
 <br>
 
