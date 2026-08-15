@@ -7,7 +7,6 @@
 ### The official repo for the `chmod +x larp` Discord server
 
 <p>
-  <a href="https://discord.gg/XzjNfhehKj"><img src="https://img.shields.io/discord/0?style=for-the-badge&logo=discord&logoColor=white&label=Discord&color=5865F2" alt="Discord" /></a>
   <a href="https://github.com/realv1sta/larphub/stargazers"><img src="https://img.shields.io/github/stars/realv1sta/larphub?style=for-the-badge&color=FFD60A&logo=github" alt="Stars" /></a>
   <a href="https://github.com/realv1sta/larphub/network/members"><img src="https://img.shields.io/github/forks/realv1sta/larphub?style=for-the-badge&color=58A6FF&logo=github" alt="Forks" /></a>
   <a href="https://github.com/realv1sta/larphub/graphs/contributors"><img src="https://img.shields.io/github/contributors/realv1sta/larphub?style=for-the-badge&color=32D583" alt="Contributors" /></a>
