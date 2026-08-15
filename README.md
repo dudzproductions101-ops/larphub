@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="./og" alt="og larp" width="100%" />
+<img src="./walls/beamy/wall3.jpg" alt="og larp" width="100%" />
 
 # LarpHub
 
