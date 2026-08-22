@@ -157,6 +157,11 @@ NEW_HOSTNAME="${NEW_HOSTNAME}"
 GRUB_DISK="${GRUB_DISK}"
 
 hwclock --systohc
+
+# Configure pacman settings
+sed -i 's/^#*ParallelDownloads = .*/ParallelDownloads = 12/' /etc/pacman.conf
+sed -i '/^ParallelDownloads = 12/a Color\nILoveCandy' /etc/pacman.conf
+
 pacman -Sy git --noconfirm
 pacman -S plasma konsole dolphin kitty fastfetch sddm --noconfirm
 
@@ -167,21 +172,14 @@ cat > /etc/hosts <<EOF
 127.0.1.1   \${NEW_HOSTNAME}.localdomain \${NEW_HOSTNAME}
 EOF
 
-# ---------------------------------------------------------------------------
-# Service setup
-# ---------------------------------------------------------------------------
 pacman -S --noconfirm networkmanager vim nano
 systemctl enable NetworkManager
 systemctl enable sddm --force
 
-# Generate the locales
 sed -i 's/#en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen
 locale-gen
 echo "LANG=en_US.UTF-8" > /etc/locale.conf
 
-# ---------------------------------------------------------------------------
-# GRUB
-# ---------------------------------------------------------------------------
 info "Installing GRUB..."
 
 if [ "\${BOOT_MODE}" = "uefi" ]; then
@@ -194,24 +192,18 @@ fi
 
 grub-mkconfig -o /boot/grub/grub.cfg
 
-# ---------------------------------------------------------------------------
-# Root password
-# ---------------------------------------------------------------------------
 echo ""
 info "============================================================"
 info " Set the ROOT password:"
 info "============================================================"
 passwd
 
-# ---------------------------------------------------------------------------
-# Optional new user
-# ---------------------------------------------------------------------------
 echo ""
-echo -e "\${CYAN}[INPUT]\${NC} Would you like to create a new user? (y/n)"
+echo -e "${CYAN}[INPUT]\${NC} Would you like to create a new user? (y/n)"
 read -rp "  Choice: " CREATE_USER
 
 if [ "\${CREATE_USER}" = "y" ]; then
-    echo -e "\${CYAN}[INPUT]\${NC} Enter the new username:"
+    echo -e "${CYAN}[INPUT]\${NC} Enter the new username:"
     read -rp "  Username: " NEW_USER
     if [ -z "\${NEW_USER}" ]; then
         warn "No username entered — skipping user creation."
@@ -221,17 +213,16 @@ if [ "\${CREATE_USER}" = "y" ]; then
         info "User '\${NEW_USER}' created and added to: wheel, audio, video, input"
         info "Set a password for '\${NEW_USER}':"
         passwd "\${NEW_USER}"
+        
+        info "Cloning and setting up dotfiles for '\${NEW_USER}'..."
+        su - "\${NEW_USER}" -c "cd ~ && mkdir -p ~/.config && git clone https://github.com/beamyyl/maindots && cp -r maindots/* ~/.config/ && rm -rf maindots"
+        info "Dotfiles installed successfully."
         info "User setup complete."
-        su - "${NEW_USER}" -s /bin/bash -c 'git clone https://github.com/beamyyl/maindots && mkdir -p ~/.config && cp -r maindots/* ~/.config/ && rm -rf maindots'
-        info "Dot files added."
     fi
 else
     info "Skipping user creation."
 fi
 
-# ---------------------------------------------------------------------------
-# Done
-# ---------------------------------------------------------------------------
 echo ""
 info "============================================================"
 info " Installation complete!"
