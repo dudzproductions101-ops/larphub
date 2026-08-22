@@ -164,6 +164,7 @@ sed -i '/^ParallelDownloads = 12/a Color\nILoveCandy' /etc/pacman.conf
 
 pacman -Sy git --noconfirm
 pacman -S plasma konsole dolphin kitty fastfetch sddm --noconfirm
+pacman -Rnsdd plasma-bigscreen --noconfirm
 
 echo "\${NEW_HOSTNAME}" > /etc/hostname
 cat > /etc/hosts <<EOF
