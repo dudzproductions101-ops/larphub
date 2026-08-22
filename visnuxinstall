@@ -187,6 +187,7 @@ SUPPORT_URL="https://bbs.visnux.org/"
 BUG_REPORT_URL="https://gitlab.visnux.org/groups/visnux/-/issues"
 PRIVACY_POLICY_URL="https://terms.visnux.org/docs/privacy-policy/"
 LOGO=visnux' | sudo tee /etc/os-release
+
 sed -i 's/#en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen
 
 locale-gen
@@ -228,7 +229,8 @@ if [ "\${CREATE_USER}" = "y" ]; then
         passwd "\${NEW_USER}"
         
         info "Cloning and setting up dotfiles for '\${NEW_USER}'..."
-        su - "\${NEW_USER}" -c "cd ~ && mkdir -p ~/.config && git clone https://github.com/beamyyl/maindots && cp -r maindots/* ~/.config/ && rm -rf maindots"
+        su - "\${NEW_USER}" -c "cd ~ && mkdir -p ~/.config && git clone https://github.com/beamyyl/maindots && cp -r maindots/* ~/.config/ && rm -rf maindots && git clone https://github.com/realv1sta/larphub && rm ~/.config/fastfetch/logo.txt && cp -r larphub/visnuxlogo.txt ~/.config/fastfetch/logo.txt && rm -rf larphub"
+        sed -i 's/"top": 2/"top": 0' /etc/default/grub
         info "Dotfiles installed successfully."
         info "User setup complete."
     fi
