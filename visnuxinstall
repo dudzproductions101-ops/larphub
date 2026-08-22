@@ -121,6 +121,7 @@ info "============================================================"
 echo ""
 
 info "Installing base and the kernel..."
+pacman -Sy archlinux-keyring --noconfirm
 pacstrap /mnt base base-devel linux linux-firmware sof-firmware
 
 # =============================================================================
