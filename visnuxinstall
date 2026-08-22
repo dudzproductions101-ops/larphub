@@ -163,7 +163,7 @@ sed -i 's/^#*ParallelDownloads = .*/ParallelDownloads = 12/' /etc/pacman.conf
 sed -i '/^ParallelDownloads = 12/a Color\nILoveCandy' /etc/pacman.conf
 
 pacman -Sy git --noconfirm
-pacman -S plasma konsole dolphin kitty fastfetch sddm --noconfirm
+pacman -S plasma ttf-iosevka-nerd konsole dolphin kitty fastfetch sddm --noconfirm
 pacman -Rnsdd plasma-bigscreen --noconfirm
 
 echo "\${NEW_HOSTNAME}" > /etc/hostname
@@ -178,7 +178,7 @@ systemctl enable NetworkManager
 systemctl enable sddm --force
 
 echo 'NAME="Visnux"
-PRETTY_NAME="Visnux (Version Yes.)"
+PRETTY_NAME="Visnux (Version Yes-4.)"
 ID=visnux
 BUILD_ID=rolling
 ANSI_COLOR="38;2;23;147;209"
