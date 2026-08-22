@@ -166,6 +166,13 @@ pacman -Sy git --noconfirm
 pacman -S plasma ttf-iosevka-nerd konsole dolphin kitty fastfetch sddm --noconfirm
 pacman -Rnsdd plasma-bigscreen --noconfirm
 
+#swapfile
+fallocate -l 8G /swapfile
+chmod 600 /swapfile
+mkswap /swapfile
+swapon /swapfile
+echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
+
 echo "\${NEW_HOSTNAME}" > /etc/hostname
 cat > /etc/hosts <<EOF
 127.0.0.1   localhost
