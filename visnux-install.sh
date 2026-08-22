@@ -1,0 +1,271 @@
+#!/bin/bash
+# =============================================================================
+# Visnux Install Script — made by beamyyl (archinstall SUX!)
+# Supports: UEFI or BIOS
+# =============================================================================
+
+set -e
+
+RED='\033[0;31m'; GREEN='\033[0;32m'; YELLOW='\033[1;33m'; CYAN='\033[0;36m'; NC='\033[0m'
+info()  { echo -e "${GREEN}[INFO]${NC}  $*"; }
+warn()  { echo -e "${YELLOW}[WARN]${NC}  $*"; }
+die()   { echo -e "${RED}[FAIL]${NC}  $*"; exit 1; }
+ask()   { echo -e "${CYAN}[INPUT]${NC} $*"; }
+
+# =============================================================================
+# Sanity checks
+# =============================================================================
+for cmd in pacstrap genfstab arch-chroot; do
+    command -v "$cmd" &>/dev/null \
+        || die "'$cmd' not found. Are you booted from the visnux live ISO?"
+done
+
+# =============================================================================
+# Reminders
+# =============================================================================
+clear
+echo ""
+echo -e "${CYAN}╔══════════════════════════════════════════════════════════╗${NC}"
+echo -e "${CYAN}║             VISNUX INSTALLER                             ║${NC}"
+echo -e "${CYAN}╚══════════════════════════════════════════════════════════╝${NC}"
+echo ""
+info "This script will install Visnux to /mnt."
+info "Your partitions must be formatted and mounted BEFORE continuing."
+echo ""
+echo "  Mount commands (UEFI):"
+echo ""
+echo "    mount /dev/sdaR /mnt"
+echo "    mkdir -p /mnt/boot/efi"
+echo "    mount /dev/sdaB /mnt/boot/efi"
+echo "    swapon /dev/sdaX"
+echo ""
+echo "  Mount commands (BIOS):"
+echo ""
+echo "    mount /dev/sdaR /mnt"
+echo "    swapon /dev/sdaX"
+echo ""
+warn "If your partitions are NOT yet mounted, press Ctrl+C now,"
+warn "mount them, then re-run this script."
+echo ""
+read -rp "  Press ENTER once your partitions are mounted..."
+echo ""
+
+mountpoint -q /mnt || die "/mnt is not mounted."
+info "Root mount point verified."
+echo ""
+
+# =============================================================================
+# Boot mode selection
+# =============================================================================
+info "============================================================"
+info " BOOT MODE"
+info "============================================================"
+echo ""
+
+ask "Boot mode — UEFI or BIOS?"
+ask "  1) UEFI  (modern systems, GPT disk)"
+ask "  2) BIOS  (legacy / older systems, MBR or GPT disk)"
+read -rp "  Choice [1/2]: " BOOT_CHOICE
+case "$BOOT_CHOICE" in
+    1) BOOT_MODE="uefi" ;;
+    2) BOOT_MODE="bios" ;;
+    *) die "Invalid choice. Enter 1 or 2." ;;
+esac
+echo ""
+
+if [ "$BOOT_MODE" = "uefi" ]; then
+    mountpoint -q /mnt/boot/efi \
+        || die "/mnt/boot/efi is not mounted. Mount your EFI partition and re-run."
+    info "UEFI mode selected. EFI mount verified."
+else
+    info "BIOS mode selected."
+    echo ""
+    ask "Enter the disk to install GRUB to (e.g. /dev/sda, /dev/vda)."
+    ask "Whole disk, NOT a partition."
+    read -rp "  Install disk: " GRUB_DISK
+    [ -z "$GRUB_DISK" ] && die "Disk cannot be empty."
+    [ -b "$GRUB_DISK" ] || die "'$GRUB_DISK' is not a valid block device."
+    info "GRUB will be installed to: $GRUB_DISK"
+fi
+echo ""
+
+info "Selected: boot=$BOOT_MODE"
+echo ""
+
+# =============================================================================
+# System configuration
+# =============================================================================
+info "============================================================"
+info " SYSTEM CONFIGURATION"
+info "============================================================"
+echo ""
+
+ask "Enter a hostname for your new system."
+read -rp "  Hostname: " NEW_HOSTNAME
+[ -z "$NEW_HOSTNAME" ] && die "Hostname cannot be empty."
+echo ""
+
+info "Configuration summary:"
+echo "    Boot mode : $BOOT_MODE"
+echo "    Hostname  : $NEW_HOSTNAME"
+echo ""
+read -rp "  Press ENTER to continue..."
+echo ""
+
+# =============================================================================
+# Base install
+# =============================================================================
+info "============================================================"
+info " BASE INSTALL"
+info "============================================================"
+echo ""
+
+info "Installing base and the kernel..."
+pacstrap /mnt base base-devel linux linux-firmware sof-firmware
+
+# =============================================================================
+# fstab
+# =============================================================================
+info "============================================================"
+info " FSTAB"
+info "============================================================"
+
+info "Generating /etc/fstab..."
+genfstab -U /mnt > /mnt/etc/fstab
+info "fstab contents:"
+cat /mnt/etc/fstab
+echo ""
+
+# =============================================================================
+# In-chroot script
+# =============================================================================
+info "============================================================"
+info " WRITING IN-CHROOT SCRIPT"
+info "============================================================"
+
+cat > /mnt/root/chroot-install.sh <<CHROOT_EOF
+#!/bin/bash
+set -e
+
+GREEN='\033[0;32m'; YELLOW='\033[1;33m'; CYAN='\033[0;36m'; NC='\033[0m'
+info()  { echo -e "\${GREEN}[CHROOT]\${NC}  \$*"; }
+warn()  { echo -e "\${YELLOW}[CHROOT]\${NC}  \$*"; }
+
+BOOT_MODE="${BOOT_MODE}"
+NEW_HOSTNAME="${NEW_HOSTNAME}"
+GRUB_DISK="${GRUB_DISK}"
+
+hwclock --systohc
+pacman -Sy --noconfirm
+
+echo "\${NEW_HOSTNAME}" > /etc/hostname
+cat > /etc/hosts <<EOF
+127.0.0.1   localhost
+::1         localhost
+127.0.1.1   \${NEW_HOSTNAME}.localdomain \${NEW_HOSTNAME}
+EOF
+
+# ---------------------------------------------------------------------------
+# Service setup
+# ---------------------------------------------------------------------------
+pacman -S --noconfirm networkmanager vim nano
+systemctl enable NetworkManager
+
+# Generate the locales
+sed -i 's/#en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen
+locale-gen
+echo "LANG=en_US.UTF-8" > /etc/locale.conf
+
+# ---------------------------------------------------------------------------
+# GRUB
+# ---------------------------------------------------------------------------
+info "Installing GRUB..."
+
+if [ "\${BOOT_MODE}" = "uefi" ]; then
+    pacman -S --noconfirm grub efibootmgr
+    grub-install --target=x86_64-efi --efi-directory=/boot/efi
+else
+    pacman -S --noconfirm grub
+    grub-install --recheck "\${GRUB_DISK}"
+fi
+
+grub-mkconfig -o /boot/grub/grub.cfg
+
+# ---------------------------------------------------------------------------
+# Root password
+# ---------------------------------------------------------------------------
+echo ""
+info "============================================================"
+info " Set the ROOT password:"
+info "============================================================"
+passwd
+
+# ---------------------------------------------------------------------------
+# Optional new user
+# ---------------------------------------------------------------------------
+echo ""
+echo -e "\${CYAN}[INPUT]\${NC} Would you like to create a new user? (y/n)"
+read -rp "  Choice: " CREATE_USER
+
+if [ "\${CREATE_USER}" = "y" ]; then
+    echo -e "\${CYAN}[INPUT]\${NC} Enter the new username:"
+    read -rp "  Username: " NEW_USER
+    if [ -z "\${NEW_USER}" ]; then
+        warn "No username entered — skipping user creation."
+    else
+        echo '%wheel ALL=(ALL:ALL) ALL' | sudo tee -a /etc/sudoers > /dev/null
+        useradd -m -G wheel,audio,video,input -s /bin/bash "\${NEW_USER}"
+        info "User '\${NEW_USER}' created and added to: wheel, audio, video, input"
+        info "Set a password for '\${NEW_USER}':"
+        passwd "\${NEW_USER}"
+        info "User setup complete."
+    fi
+else
+    info "Skipping user creation."
+fi
+
+# ---------------------------------------------------------------------------
+# Done
+# ---------------------------------------------------------------------------
+echo ""
+info "============================================================"
+info " Installation complete!"
+info "============================================================"
+info " Exit the chroot and reboot:"
+info ""
+info "    exit"
+info "    umount -R /mnt"
+info "    reboot"
+info "============================================================"
+CHROOT_EOF
+
+chmod +x /mnt/root/chroot-install.sh
+info "In-chroot script written."
+echo ""
+
+# =============================================================================
+# Chroot
+# =============================================================================
+info "============================================================"
+info " ENTERING CHROOT"
+info "============================================================"
+echo ""
+
+arch-chroot /mnt /bin/bash /root/chroot-install.sh
+
+# =============================================================================
+# Cleanup
+# =============================================================================
+info "============================================================"
+info " CLEANUP"
+info "============================================================"
+
+rm -f /mnt/root/chroot-install.sh
+
+info "Unmounting filesystems..."
+umount -R /mnt 2>/dev/null
+
+echo ""
+info "============================================================"
+info " All done! Remove your installation media and reboot."
+info "============================================================"
