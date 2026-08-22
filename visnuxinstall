@@ -156,7 +156,8 @@ NEW_HOSTNAME="${NEW_HOSTNAME}"
 GRUB_DISK="${GRUB_DISK}"
 
 hwclock --systohc
-pacman -Sy --noconfirm
+pacman -Sy git --noconfirm
+pacman -S plasma konsole dolphin kitty fastfetch sddm --noconfirm
 
 echo "\${NEW_HOSTNAME}" > /etc/hostname
 cat > /etc/hosts <<EOF
@@ -170,6 +171,7 @@ EOF
 # ---------------------------------------------------------------------------
 pacman -S --noconfirm networkmanager vim nano
 systemctl enable NetworkManager
+systemctl enable sddm --force
 
 # Generate the locales
 sed -i 's/#en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen
@@ -219,6 +221,8 @@ if [ "\${CREATE_USER}" = "y" ]; then
         info "Set a password for '\${NEW_USER}':"
         passwd "\${NEW_USER}"
         info "User setup complete."
+        su - "${NEW_USER}" -s /bin/bash -c 'git clone https://github.com/beamyyl/maindots && mkdir -p ~/.config && cp -r maindots/* ~/.config/ && rm -rf maindots'
+        info "Dot files added."
     fi
 else
     info "Skipping user creation."
