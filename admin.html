@@ -30,7 +30,6 @@
             min-height: 80vh;
         }
 
-        /* Login Box */
         .login-box {
             background-color: var(--box-bg);
             border: 1px solid var(--border-color);
@@ -59,13 +58,13 @@
             border-radius: 4px;
             color: var(--text-color);
             font-size: 0.9rem;
-            font-family: inherit;
+            font-family: monospace;
             outline: none;
         }
 
         textarea {
             resize: vertical;
-            min-height: 80px;
+            min-height: 70px;
         }
 
         input[type="password"]:focus, textarea:focus {
@@ -93,10 +92,6 @@
             border: none;
         }
 
-        .btn-danger:hover {
-            background-color: #d73a49;
-        }
-
         .error-msg {
             color: var(--accent-red);
             font-size: 0.85rem;
@@ -104,7 +99,6 @@
             display: none;
         }
 
-        /* Main Admin Content Container */
         .admin-content {
             display: none;
             width: 100%;
@@ -138,6 +132,7 @@
             display: flex;
             gap: 10px;
             margin-top: 10px;
+            flex-wrap: wrap;
         }
 
         a {
@@ -145,19 +140,18 @@
             text-decoration: none;
         }
 
-        a:hover {
-            text-decoration: underline;
-        }
-
-        .status-text {
+        pre {
+            background: var(--bg-color);
+            border: 1px solid var(--border-color);
+            padding: 12px;
             color: #7ee787;
-            font-weight: bold;
+            border-radius: 4px;
         }
     </style>
 </head>
 <body>
 
-    <!-- Login Overlay -->
+    <!-- Login Box -->
     <div class="login-box" id="loginBox">
         <h2>visnux / admin</h2>
         <p style="font-size: 0.85rem; color: #8b949e;">Enter password to access dashboard</p>
@@ -166,7 +160,7 @@
         <div class="error-msg" id="errorMsg">Access Denied: Invalid Password</div>
     </div>
 
-    <!-- Hidden Admin Dashboard -->
+    <!-- Admin Content -->
     <div class="admin-content" id="adminContent">
         <div class="admin-header">
             <h1>visnux / admin dashboard</h1>
@@ -174,18 +168,19 @@
         </div>
 
         <div class="card">
-            <h3>📢 Broadcast Announcement</h3>
-            <p>Write a custom message or trigger a quick maintenance notice to show on <code>index.html</code>:</p>
+            <h3>📢 Announcement Manager</h3>
+            <p>Type your message below and copy the generated output directly into <code>announcement.json</code> on your GitHub repository:</p>
             
             <textarea id="announcementText" placeholder="Type custom announcement here..."></textarea>
             
             <div class="btn-group">
-                <button onclick="postAnnouncement()">Post Custom Announcement</button>
-                <button onclick="postBeRightBack()">Post "We will be right back!"</button>
-                <button class="btn-danger" onclick="clearAnnouncement()">Clear Banner</button>
+                <button onclick="generateJSON(true)">Generate Custom Announcement</button>
+                <button onclick="setBeRightBack()">Preset: "We will be right back!"</button>
+                <button class="btn-danger" onclick="generateJSON(false)">Disable Announcement</button>
             </div>
-            
-            <p id="postStatus" class="status-text" style="display: none; margin-top: 10px;"></p>
+
+            <h4 style="margin-top: 1.5rem;">Copy to <code>announcement.json</code>:</h4>
+            <pre><code id="jsonOutput">Select an action above...</code></pre>
         </div>
     </div>
 
@@ -204,32 +199,18 @@
             }
         }
 
-        function updateStatus(text) {
-            const status = document.getElementById("postStatus");
-            status.textContent = text;
-            status.style.display = "block";
-            setTimeout(() => { status.style.display = "none"; }, 3000);
+        function setBeRightBack() {
+            document.getElementById("announcementText").value = "We will be right back!";
+            generateJSON(true);
         }
 
-        function postAnnouncement() {
+        function generateJSON(activeStatus) {
             const text = document.getElementById("announcementText").value;
-            if (text.trim() !== "") {
-                localStorage.setItem("visnux_announcement", text);
-                updateStatus("Announcement updated on index.html!");
-            }
-        }
-
-        function postBeRightBack() {
-            const msg = "We will be right back!";
-            localStorage.setItem("visnux_announcement", msg);
-            document.getElementById("announcementText").value = msg;
-            updateStatus("Posted 'We will be right back!' to index.html!");
-        }
-
-        function clearAnnouncement() {
-            localStorage.removeItem("visnux_announcement");
-            document.getElementById("announcementText").value = "";
-            updateStatus("Banner cleared from index.html!");
+            const json = {
+                active: activeStatus,
+                message: activeStatus ? text : ""
+            };
+            document.getElementById("jsonOutput").textContent = JSON.stringify(json, null, 2);
         }
     </script>
 
