@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cursor Maze Game</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+    }
+
+    body {
+      background-color: #121214;
+      color: #ffffff;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      overflow: hidden;
+    }
+
+    .header {
+      margin-bottom: 20px;
+      text-align: center;
+    }
+
+    .header h1 {
+      font-size: 2rem;
+      margin-bottom: 8px;
+      color: #4f46e5;
+    }
+
+    .header p {
+      color: #a1a1aa;
+      font-size: 0.95rem;
+    }
+
+    .game-container {
+      position: relative;
+      width: 600px;
+      height: 400px;
+      background-color: #1e1e24;
+      border: 3px solid #3f3f46;
+      border-radius: 8px;
+      overflow: hidden;
+      cursor: crosshair;
+    }
+
+    /* Maze Walls */
+    .wall {
+      position: absolute;
+      background-color: #ef4444;
+      border-radius: 4px;
+      transition: background-color 0.2s;
+    }
+
+    /* Start Zone */
+    #start {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      width: 60px;
+      height: 60px;
+      background-color: #3b82f6;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      font-size: 0.85rem;
+      color: #fff;
+    }
+
+    /* Goal Zone */
+    #goal {
+      position: absolute;
+      bottom: 20px;
+      right: 20px;
+      width: 60px;
+      height: 60px;
+      background-color: #10b981;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      font-size: 0.85rem;
+      color: #fff;
+      opacity: 0.5;
+      pointer-events: none;
+    }
+
+    #goal.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    /* Overlay Screen (Game Over / Win) */
+    .overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.85);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 10;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease;
+    }
+
+    .overlay.visible {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .overlay h2 {
+      font-size: 2.5rem;
+      margin-bottom: 12px;
+    }
+
+    .overlay.win h2 {
+      color: #10b981;
+    }
+
+    .overlay.lose h2 {
+      color: #ef4444;
+    }
+
+    .btn {
+      margin-top: 15px;
+      padding: 10px 20px;
+      font-size: 1rem;
+      font-weight: 600;
+      background-color: #4f46e5;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+
+    .btn:hover {
+      background-color: #4338ca;
+    }
+
+    .status {
+      margin-top: 15px;
+      font-size: 1.1rem;
+      font-weight: 500;
+      height: 24px;
+      color: #e4e4e7;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <h1>Cursor Maze</h1>
+    <p>Hover over <strong>START</strong> to begin. Reach <strong>GOAL</strong> without touching the walls!</p>
+  </div>
+
+  <div class="game-container" id="maze">
+    <div id="start">START</div>
+    <div id="goal">GOAL</div>
+
+    <!-- Walls making up the maze path -->
+    <div class="wall" style="top: 0; left: 100px; width: 20px; height: 300px;"></div>
+    <div class="wall" style="top: 100px; left: 200px; width: 20px; height: 300px;"></div>
+    <div class="wall" style="top: 0; left: 300px; width: 20px; height: 280px;"></div>
+    <div class="wall" style="top: 120px; left: 400px; width: 20px; height: 280px;"></div>
+    <div class="wall" style="top: 0; left: 500px; width: 20px; height: 300px;"></div>
+    
+    <div class="wall" style="top: 280px; left: 300px; width: 120px; height: 20px;"></div>
+    <div class="wall" style="top: 100px; left: 120px; width: 100px; height: 20px;"></div>
+
+    <!-- Overlay Screen -->
+    <div class="overlay" id="overlay">
+      <h2 id="overlay-title">Game Over</h2>
+      <p id="overlay-msg">You hit a wall!</p>
+      <button class="btn" onclick="resetGame()">Try Again</button>
+    </div>
+  </div>
+
+  <div class="status" id="status-text">Hover over START to begin</div>
+
+  <script>
+    const startZone = document.getElementById('start');
+    const goalZone = document.getElementById('goal');
+    const maze = document.getElementById('maze');
+    const walls = document.querySelectorAll('.wall');
+    const overlay = document.getElementById('overlay');
+    const overlayTitle = document.getElementById('overlay-title');
+    const overlayMsg = document.getElementById('overlay-msg');
+    const statusText = document.getElementById('status-text');
+
+    let isPlaying = false;
+
+    // Start game on hover
+    startZone.addEventListener('mouseenter', () => {
+      if (!isPlaying) {
+        isPlaying = true;
+        goalZone.classList.add('active');
+        statusText.textContent = "Navigate carefully to the GOAL!";
+        statusText.style.color = "#3b82f6";
+      }
+    });
+
+    // Detect collision with walls
+    walls.forEach(wall => {
+      wall.addEventListener('mouseenter', () => {
+        if (isPlaying) {
+          endGame(false);
+        }
+      });
+    });
+
+    // Detect reaching goal
+    goalZone.addEventListener('mouseenter', () => {
+      if (isPlaying) {
+        endGame(true);
+      }
+    });
+
+    // Detect leaving the maze boundary entirely
+    maze.addEventListener('mouseleave', () => {
+      if (isPlaying) {
+        endGame(false, "You left the game area!");
+      }
+    });
+
+    function endGame(isWin, customMsg) {
+      isPlaying = false;
+      goalZone.classList.remove('active');
+      overlay.classList.add('visible');
+
+      if (isWin) {
+        overlay.className = "overlay visible win";
+        overlayTitle.textContent = "You Win!";
+        overlayMsg.textContent = "Great precision!";
+        statusText.textContent = "Victory!";
+        statusText.style.color = "#10b981";
+      } else {
+        overlay.className = "overlay visible lose";
+        overlayTitle.textContent = "Game Over";
+        overlayMsg.textContent = customMsg || "You touched a wall!";
+        statusText.textContent = "Failed. Try again!";
+        statusText.style.color = "#ef4444";
+      }
+    }
+
+    function resetGame() {
+      overlay.classList.remove('visible');
+      statusText.textContent = "Hover over START to begin";
+      statusText.style.color = "#e4e4e7";
+    }
+  </script>
+</body>
+</html>
