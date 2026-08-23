@@ -545,7 +545,12 @@ sed -i 's/GRUB_DISTRIBUTOR="Artix"/GRUB_DISTRIBUTOR="Visnux"/' /etc/default/grub
 git clone https://github.com/realv1sta/larphub
 cp -r larphub/neveraskmewhatthisis/Office-sidebar /boot/grub/themes
 cp larphub/visnux.svg /usr/share/icons/hicolor/scalable/apps/visnux.svg
-cp larphub/visnux.svg /usr/share/pixmaps/visnux.svg
+cp larphub/visnux.svg /usr/share/pixmaps/visnux.
+mkdir ~/.config
+mkdir ~/.config/fastfetch
+chmod +x larphub/colorlogo.sh && cd larphub/ && ./colorlogo.sh > ~/.config/fastfetch/logo.txt
+cp neveraskmewhatthisis/config.jsonc ~/.config/fastfetch/
+cd ..
 rm -rf larphub
 
 echo 'GRUB_THEME=/boot/grub/themes/Office-sidebar/theme.txt' | tee -a /etc/default/grub
