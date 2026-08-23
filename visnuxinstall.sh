@@ -523,7 +523,7 @@ sudo pacman -S mesa lib32-mesa \
   vulkan-radeon lib32-vulkan-radeon \
   vulkan-nouveau lib32-vulkan-nouveau \
   vulkan-swrast lib32-vulkan-swrast \
-  libva intel-media-driver
+  libva intel-media-driver --noconfirm
 
 # =============================================================================
 # GRUB
