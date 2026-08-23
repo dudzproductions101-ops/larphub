@@ -371,6 +371,7 @@ hwclock --systohc
 
 pacman -Sy --noconfirm git
 pacman -S --noconfirm ttf-iosevka-nerd ttf-adwaitamono-nerd
+pacman -S --noconfirm fish
 
 echo "\${NEW_HOSTNAME}" > /etc/hostname
 cat > /etc/hosts <<EOF
@@ -560,7 +561,7 @@ if [[ "\${CREATE_USER}" =~ ^[Yy]$ ]]; then
     echo '%wheel ALL=(ALL:ALL) ALL' > /etc/sudoers.d/wheel
     chmod 440 /etc/sudoers.d/wheel
 
-    useradd -m -G wheel,audio,video,input -s /bin/bash "\${NEW_USER}"
+    useradd -m -G wheel,audio,video,input -s /usr/bin/fish "\${NEW_USER}"
 
     info "User '\${NEW_USER}' created and added to: wheel, audio, video, input"
     info "Set a password for '\${NEW_USER}':"
