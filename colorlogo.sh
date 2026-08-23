@@ -1,7 +1,7 @@
 GREEN='\033[1;32m'
 BROWN='\033[0;33m'
 RESET='\033[0m'
-printf "${GREEN}        .zJJ!.         
+printf "${GREEN}        .zJJ1.         
      ..UUUYYYYU..      
      :UUUYYYYYYY>.     
     .UUUYYYYYYYYU.     
