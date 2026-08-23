@@ -12,13 +12,22 @@ warn()  { echo -e "${YELLOW}[WARN]${NC}  $*"; }
 die()   { echo -e "${RED}[FAIL]${NC}  $*"; exit 1; }
 ask()   { echo -e "${CYAN}[INPUT]${NC} $*"; }
 
+restore_live() {
+    if [ -n "${LIVE_PACMAN_CONF:-}" ] && [ -f "${LIVE_PACMAN_CONF}" ]; then
+        cp "${LIVE_PACMAN_CONF}" /etc/pacman.conf
+    fi
+    if [ -n "${LIVE_MIRRORLIST:-}" ] && [ -f "${LIVE_MIRRORLIST}" ]; then
+        cp "${LIVE_MIRRORLIST}" /etc/pacman.d/mirrorlist
+    fi
+}
+
+trap restore_live EXIT
+
 # =============================================================================
 # Sanity checks
 # =============================================================================
-for cmd in pacstrap genfstab arch-chroot; do
-    command -v "$cmd" &>/dev/null \
-        || die "'$cmd' not found. Are you booted from the visnux live ISO?"
-done
+command -v pacman &>/dev/null || die "'pacman' not found. Are you booted from the visnux live ISO?"
+[ "$(id -u)" -eq 0 ] || die "This installer must be run as root."
 
 # =============================================================================
 # Reminders
@@ -26,7 +35,7 @@ done
 clear
 echo ""
 echo -e "${CYAN}╔══════════════════════════════════════════════════════════╗${NC}"
-echo -e "${CYAN}║             VISNUX INSTALLER                             ║${NC}"
+echo -e "${CYAN}║                    VISNUX INSTALLER                      ║${NC}"
 echo -e "${CYAN}╚══════════════════════════════════════════════════════════╝${NC}"
 echo ""
 info "This script will install Visnux to /mnt."
@@ -62,15 +71,17 @@ info " BOOT MODE"
 info "============================================================"
 echo ""
 
-ask "Boot mode — UEFI or BIOS?"
-ask "  1) UEFI  (modern systems, GPT disk)"
-ask "  2) BIOS  (legacy / older systems, MBR or GPT disk)"
-read -rp "  Choice [1/2]: " BOOT_CHOICE
-case "$BOOT_CHOICE" in
-    1) BOOT_MODE="uefi" ;;
-    2) BOOT_MODE="bios" ;;
-    *) die "Invalid choice. Enter 1 or 2." ;;
-esac
+while true; do
+    ask "Boot mode — UEFI or BIOS?"
+    ask "  1) UEFI  (modern systems, GPT disk)"
+    ask "  2) BIOS  (legacy / older systems, MBR or GPT disk)"
+    read -rp "  Choice [1/2]: " BOOT_CHOICE
+    case "$BOOT_CHOICE" in
+        1) BOOT_MODE="uefi"; break ;;
+        2) BOOT_MODE="bios"; break ;;
+        *) warn "Invalid choice. Enter 1 or 2." ;;
+    esac
+done
 echo ""
 
 if [ "$BOOT_MODE" = "uefi" ]; then
@@ -80,16 +91,79 @@ if [ "$BOOT_MODE" = "uefi" ]; then
 else
     info "BIOS mode selected."
     echo ""
-    ask "Enter the disk to install GRUB to (e.g. /dev/sda, /dev/vda)."
-    ask "Whole disk, NOT a partition."
-    read -rp "  Install disk: " GRUB_DISK
-    [ -z "$GRUB_DISK" ] && die "Disk cannot be empty."
-    [ -b "$GRUB_DISK" ] || die "'$GRUB_DISK' is not a valid block device."
+    while true; do
+        ask "Enter the disk to install GRUB to (e.g. /dev/sda, /dev/vda)."
+        ask "Whole disk, NOT a partition."
+        read -rp "  Install disk: " GRUB_DISK
+        if [ -n "$GRUB_DISK" ] && [ -b "$GRUB_DISK" ]; then
+            break
+        fi
+        warn "Invalid block device or empty. Please try again."
+    done
     info "GRUB will be installed to: $GRUB_DISK"
 fi
 echo ""
 
-info "Selected: boot=$BOOT_MODE"
+# =============================================================================
+# Init selection
+# =============================================================================
+info "============================================================"
+info " INIT SYSTEM"
+info "============================================================"
+echo ""
+
+while true; do
+    ask "Init system?"
+    ask "  1) systemd"
+    ask "  2) dinit"
+    ask "  3) openrc"
+    ask "  4) runit"
+    read -rp "  Choice [1-4]: " INIT_CHOICE
+    case "$INIT_CHOICE" in
+        1) INIT_SYSTEM="systemd"; break ;;
+        2) INIT_SYSTEM="dinit"; break ;;
+        3) INIT_SYSTEM="openrc"; break ;;
+        4) INIT_SYSTEM="runit"; break ;;
+        *) warn "Invalid choice. Enter 1, 2, 3, or 4." ;;
+    esac
+done
+echo ""
+
+# =============================================================================
+# Desktop Environment selection
+# =============================================================================
+info "============================================================"
+info " DESKTOP ENVIRONMENT"
+info "============================================================"
+echo ""
+
+while true; do
+    ask "Desktop Environment?"
+    ask "  1) KDE Plasma"
+    ask "  2) Xfce4"
+    read -rp "  Choice [1-2]: " DE_CHOICE
+    case "$DE_CHOICE" in
+        1) DESKTOP_ENV="kde"; break ;;
+        2) DESKTOP_ENV="xfce"; break ;;
+        *) warn "Invalid choice. Enter 1 or 2." ;;
+    esac
+done
+echo ""
+
+# =============================================================================
+# Multilib
+# =============================================================================
+while true; do
+    ask "Enable the multilib repository (for 32-bit packages)? [Y/n]"
+    read -rp "  Choice: " MULTILIB_CHOICE
+    if [[ "$MULTILIB_CHOICE" =~ ^[Nn]$ ]]; then
+        ENABLE_MULTILIB="no"; break
+    elif [[ "$MULTILIB_CHOICE" =~ ^[Yy]$ ]] || [ -z "$MULTILIB_CHOICE" ]; then
+        ENABLE_MULTILIB="yes"; break
+    else
+        warn "Please enter Y or n."
+    fi
+done
 echo ""
 
 # =============================================================================
@@ -100,13 +174,21 @@ info " SYSTEM CONFIGURATION"
 info "============================================================"
 echo ""
 
-ask "Enter a hostname for your new system."
-read -rp "  Hostname: " NEW_HOSTNAME
-[ -z "$NEW_HOSTNAME" ] && die "Hostname cannot be empty."
+while true; do
+    ask "Enter a hostname for your new system."
+    read -rp "  Hostname: " NEW_HOSTNAME
+    if [ -n "$NEW_HOSTNAME" ]; then
+        break
+    fi
+    warn "Hostname cannot be empty. Please try again."
+done
 echo ""
 
 info "Configuration summary:"
 echo "    Boot mode : $BOOT_MODE"
+echo "    Init      : $INIT_SYSTEM"
+echo "    Desktop   : $DESKTOP_ENV"
+echo "    Multilib  : $ENABLE_MULTILIB"
 echo "    Hostname  : $NEW_HOSTNAME"
 echo ""
 read -rp "  Press ENTER to continue..."
@@ -120,19 +202,117 @@ info " BASE INSTALL"
 info "============================================================"
 echo ""
 
-info "Installing base and the kernel..."
-pacman -Sy archlinux-keyring --noconfirm
-pacstrap /mnt base base-devel linux linux-firmware sof-firmware
+if [ "$INIT_SYSTEM" = "systemd" ]; then
+    command -v pacstrap &>/dev/null || die "'pacstrap' not found."
+    
+    info "Enabling parallel downloads on host..."
+    sed -i 's/^#*ParallelDownloads = .*/ParallelDownloads = 12/' /etc/pacman.conf
+
+    info "Installing base and the kernel..."
+    pacman -Sy archlinux-keyring --noconfirm
+    pacstrap /mnt base base-devel linux linux-firmware sof-firmware
+
+    info "Applying pacman tweaks to chroot..."
+    sed -i 's/^#*ParallelDownloads = .*/ParallelDownloads = 12/' /mnt/etc/pacman.conf
+    sed -i '/^ParallelDownloads = 12/a Color\nILoveCandy' /mnt/etc/pacman.conf
+
+    if grep -q '^\[multilib\]$' /mnt/etc/pacman.conf; then
+        sed -i '/^\[multilib\]/,/^\[/ s#^Include = /etc/pacman.d/mirrorlist$#Include = /etc/pacman.d/mirrorlist#' /mnt/etc/pacman.conf
+    elif [ "$ENABLE_MULTILIB" = "yes" ]; then
+        cat >> /mnt/etc/pacman.conf <<'EOF'
+
+[multilib]
+Include = /etc/pacman.d/mirrorlist
+EOF
+    fi
+else
+    info "Preparing Artix repositories for pacstrap..."
+
+    ARTIX_BOOTSTRAP_CONF="/tmp/visnux-artix-bootstrap.conf"
+    cat > "$ARTIX_BOOTSTRAP_CONF" <<EOF
+[options]
+Architecture = auto
+Color
+CheckSpace
+ParallelDownloads = 12
+SigLevel = Never
+
+[system]
+Server = https://mirrors.rit.edu/artixlinux/\$repo/os/\$arch
+EOF
+
+    info "Installing Artix keyring on the live system..."
+    pacman --config "$ARTIX_BOOTSTRAP_CONF" -Sy --noconfirm artix-keyring
+    pacman-key --init
+    pacman-key --populate artix
+
+    ARTIX_CONF="/tmp/visnux-artix.conf"
+    cat > "$ARTIX_CONF" <<EOF
+[options]
+Architecture = auto
+Color
+CheckSpace
+ParallelDownloads = 12
+SigLevel = Required DatabaseOptional
+LocalFileSigLevel = Optional
+
+[system]
+Server = https://mirrors.rit.edu/artixlinux/\$repo/os/\$arch
+[world]
+Server = https://mirrors.rit.edu/artixlinux/\$repo/os/\$arch
+[galaxy]
+Server = https://mirrors.rit.edu/artixlinux/\$repo/os/\$arch
+EOF
+
+    info "Bootstrapping Visnux (Artix base)..."
+    command -v pacstrap &>/dev/null || die "'pacstrap' not found."
+    
+    INIT_PKGS=""
+    case "$INIT_SYSTEM" in
+        openrc) INIT_PKGS="openrc elogind-openrc" ;;
+        runit)  INIT_PKGS="runit runit-rc elogind-runit" ;;
+        dinit)  INIT_PKGS="dinit elogind-dinit" ;;
+    esac
+
+    pacstrap -C "$ARTIX_CONF" /mnt base base-devel linux linux-firmware sof-firmware \
+        artix-keyring artix-mirrorlist $INIT_PKGS
+
+    info "Fixing mirrorlist clobber and applying pacman tweaks..."
+    
+    echo 'Server = https://mirrors.rit.edu/artixlinux/$repo/os/$arch' > /mnt/etc/pacman.d/mirrorlist
+
+    sed -i 's/^#*ParallelDownloads = .*/ParallelDownloads = 12/' /mnt/etc/pacman.conf
+    sed -i '/^ParallelDownloads = 12/a Color\nILoveCandy' /mnt/etc/pacman.conf
+    
+    arch-chroot /mnt pacman -Sy --noconfirm artix-mirrorlist
+
+    info "Installing Arch repository support inside the chroot..."
+    arch-chroot /mnt pacman -Sy --noconfirm artix-archlinux-support
+    arch-chroot /mnt pacman-key --populate archlinux
+
+    info "Configuring Visnux pacman.conf..."
+    if [ "$ENABLE_MULTILIB" = "yes" ]; then
+        if ! grep -q '^\[multilib\]$' /mnt/etc/pacman.conf; then
+            cat >> /mnt/etc/pacman.conf <<'EOF'
+
+[multilib]
+Include = /etc/pacman.d/mirrorlist-arch
+EOF
+        fi
+    fi
+fi
 
 # =============================================================================
-# fstab
+# Fstab
 # =============================================================================
 info "============================================================"
 info " FSTAB"
 info "============================================================"
 
+command -v genfstab &>/dev/null || die "'genfstab' not found."
 info "Generating /etc/fstab..."
 genfstab -U /mnt > /mnt/etc/fstab
+
 info "fstab contents:"
 cat /mnt/etc/fstab
 echo ""
@@ -153,25 +333,14 @@ info()  { echo -e "\${GREEN}[CHROOT]\${NC}  \$*"; }
 warn()  { echo -e "\${YELLOW}[CHROOT]\${NC}  \$*"; }
 
 BOOT_MODE="${BOOT_MODE}"
+INIT_SYSTEM="${INIT_SYSTEM}"
+DESKTOP_ENV="${DESKTOP_ENV}"
 NEW_HOSTNAME="${NEW_HOSTNAME}"
 GRUB_DISK="${GRUB_DISK}"
 
 hwclock --systohc
 
-# Configure pacman settings
-sed -i 's/^#*ParallelDownloads = .*/ParallelDownloads = 12/' /etc/pacman.conf
-sed -i '/^ParallelDownloads = 12/a Color\nILoveCandy' /etc/pacman.conf
-
-pacman -Sy git --noconfirm
-pacman -S plasma ttf-iosevka-nerd konsole dolphin kitty fastfetch sddm --noconfirm
-pacman -Rnsdd plasma-bigscreen --noconfirm
-
-#swapfile
-fallocate -l 8G /swapfile
-chmod 600 /swapfile
-mkswap /swapfile
-swapon /swapfile
-echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
+pacman -Sy --noconfirm git
 
 echo "\${NEW_HOSTNAME}" > /etc/hostname
 cat > /etc/hosts <<EOF
@@ -180,22 +349,71 @@ cat > /etc/hosts <<EOF
 127.0.1.1   \${NEW_HOSTNAME}.localdomain \${NEW_HOSTNAME}
 EOF
 
-pacman -S --noconfirm networkmanager vim nano
-systemctl enable NetworkManager
-systemctl enable sddm --force
-
-echo 'NAME="Visnux"
-PRETTY_NAME="Visnux (Version Yes-4.)"
+cat > /etc/os-release <<'EOF'
+NAME="Visnux"
+PRETTY_NAME="Visnux (Version Yes.)"
 ID=visnux
 BUILD_ID=rolling
 ANSI_COLOR="38;2;23;147;209"
-HOME_URL="https://github.com/realv1sta/larphub"
-LOGO=visnux' | sudo tee /etc/os-release
+HOME_URL="https://visnux.org/"
+DOCUMENTATION_URL="https://wiki.visnux.org/"
+SUPPORT_URL="https://bbs.visnux.org/"
+BUG_REPORT_URL="https://gitlab.visnux.org/groups/visnux/-/issues"
+PRIVACY_POLICY_URL="https://terms.visnux.org/docs/privacy-policy/"
+LOGO=visnux
+EOF
 
-sed -i 's/#en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen
-
+sed -i 's/^#en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen
 locale-gen
 echo "LANG=en_US.UTF-8" > /etc/locale.conf
+
+if [ "\${INIT_SYSTEM}" = "systemd" ]; then
+
+    if [ "\${DESKTOP_ENV}" = "kde" ]; then
+        pacman -S plasma konsole dolphin kitty fastfetch sddm networkmanager vim nano sudo --noconfirm
+    else
+        pacman -S xfce4 xfce4-whiskermenu-plugin xfce4-pulseaudio-plugin kitty fastfetch sddm networkmanager vim nano sudo --noconfirm
+    fi
+
+    systemctl enable NetworkManager
+    systemctl enable sddm --force
+
+else
+
+    if [ "\${DESKTOP_ENV}" = "kde" ]; then
+        DE_PKGS="plasma konsole dolphin"
+    else
+        DE_PKGS="xorg-server xfce4 xfce4-whiskermenu-plugin xfce4-pulseaudio-plugin"
+    fi
+
+    pacman -S \${DE_PKGS} kitty fastfetch sddm sddm-\${INIT_SYSTEM} turnstile turnstile-\${INIT_SYSTEM} pipewire pipewire-\${INIT_SYSTEM} pipewire-pulse pipewire-pulse-\${INIT_SYSTEM} wireplumber wireplumber-\${INIT_SYSTEM} networkmanager networkmanager-\${INIT_SYSTEM} dbus dbus-\${INIT_SYSTEM} vim nano sudo --noconfirm
+
+    case "\${INIT_SYSTEM}" in
+        openrc)
+            rc-update add dbus default
+            rc-update add elogind default
+            rc-update add NetworkManager default
+            rc-update add sddm default
+            rc-update add turnstiled default
+            ;;
+        runit)
+            mkdir -p /etc/runit/runsvdir/default
+            for service in dbus elogind NetworkManager sddm turnstiled; do
+                if [ -d "/etc/runit/sv/\${service}" ] && [ ! -e "/etc/runit/runsvdir/default/\${service}" ]; then
+                    ln -s "/etc/runit/sv/\${service}" "/etc/runit/runsvdir/default/\${service}"
+                fi
+            done
+            ;;
+        dinit)
+        ln -s ../dbus            /etc/dinit.d/boot.d/
+        ln -s ../elogind         /etc/dinit.d/boot.d/
+        ln -s ../NetworkManager /etc/dinit.d/boot.d/
+        ln -s ../sddm            /etc/dinit.d/boot.d/
+        ln -s ../turnstiled      /etc/dinit.d/boot.d/
+            ;;
+    esac
+
+fi
 
 info "Installing GRUB..."
 
@@ -208,37 +426,51 @@ else
 fi
 
 sed -i 's/GRUB_DISTRIBUTOR="Arch"/GRUB_DISTRIBUTOR="Visnux"/' /etc/default/grub
+sed -i 's/GRUB_DISTRIBUTOR="Artix"/GRUB_DISTRIBUTOR="Visnux"/' /etc/default/grub
 grub-mkconfig -o /boot/grub/grub.cfg
 
 echo ""
 info "============================================================"
 info " Set the ROOT password:"
 info "============================================================"
-passwd
+while ! passwd; do
+    warn "Password change failed or passwords did not match. Please try again."
+done
 
 echo ""
-echo -e "${CYAN}[INPUT]\${NC} Would you like to create a new user? (y/n)"
+echo -e "\${CYAN}[INPUT]\${NC} Would you like to create a new user? (y/n)"
 read -rp "  Choice: " CREATE_USER
 
-if [ "\${CREATE_USER}" = "y" ]; then
-    echo -e "${CYAN}[INPUT]\${NC} Enter the new username:"
-    read -rp "  Username: " NEW_USER
-    if [ -z "\${NEW_USER}" ]; then
-        warn "No username entered — skipping user creation."
-    else
-        echo '%wheel ALL=(ALL:ALL) ALL' | sudo tee -a /etc/sudoers > /dev/null
-        useradd -m -G wheel,audio,video,input -s /bin/bash "\${NEW_USER}"
-        info "User '\${NEW_USER}' created and added to: wheel, audio, video, input"
-        info "Set a password for '\${NEW_USER}':"
-        passwd "\${NEW_USER}"
-        
-        info "Cloning and setting up dotfiles for '\${NEW_USER}'..."
-        su - "\${NEW_USER}" -c "cd ~ && mkdir -p ~/.config && git clone https://github.com/beamyyl/maindots && cp -r maindots/* ~/.config/ && rm -rf maindots"
-        info "Dotfiles installed successfully."
-        info "User setup complete."
-    fi
-else
+if [[ "\${CREATE_USER}" =~ ^[Yy]$ ]]; then
+    while true; do
+        echo -e "\${CYAN}[INPUT]\${NC} Enter the new username:"
+        read -rp "  Username: " NEW_USER
+        if [ -n "\${NEW_USER}" ]; then
+            break
+        fi
+        warn "Username cannot be empty. Please try again."
+    done
+
+    echo '%wheel ALL=(ALL:ALL) ALL' > /etc/sudoers.d/wheel
+    chmod 440 /etc/sudoers.d/wheel
+
+    useradd -m -G wheel,audio,video,input -s /bin/bash "\${NEW_USER}"
+    info "User '\${NEW_USER}' created and added to: wheel, audio, video, input"
+    info "Set a password for '\${NEW_USER}':"
+    
+    while ! passwd "\${NEW_USER}"; do
+        warn "Password change failed or passwords did not match. Please try again."
+    done
+
+    info "Cloning and setting up dotfiles for '\${NEW_USER}'..."
+    su - "\${NEW_USER}" -c "cd ~ && mkdir -p ~/.config && git clone https://github.com/beamyyl/maindots && cp -r maindots/* ~/.config/ && rm -rf maindots && [ ! -f ~/.config/fastfetch/config.jsonc ] || sed -i 's/\"top\": 2/\"top\": 0/' ~/.config/fastfetch/config.jsonc"
+    info "Dotfiles installed successfully."
+    info "User setup complete."
+
+elif [[ "\${CREATE_USER}" =~ ^[Nn]$ ]]; then
     info "Skipping user creation."
+else
+    warn "Invalid choice '\${CREATE_USER}'. Skipping user creation."
 fi
 
 echo ""
@@ -276,8 +508,15 @@ info "============================================================"
 
 rm -f /mnt/root/chroot-install.sh
 
+if [ "$INIT_SYSTEM" != "systemd" ]; then
+    restore_live
+    rm -f \
+        "$ARTIX_BOOTSTRAP_CONF" \
+        "$ARTIX_CONF"
+fi
+
 info "Unmounting filesystems..."
-umount -R /mnt 2>/dev/null
+umount -R /mnt 2>/dev/null || true
 
 echo ""
 info "============================================================"
