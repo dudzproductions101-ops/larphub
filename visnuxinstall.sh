@@ -206,12 +206,46 @@ echo ""
 info "Configuration summary:"
 echo "    Boot mode : $BOOT_MODE"
 echo "    Init      : $INIT_SYSTEM"
+echo "    Cachy krnl: $USE_CACHYOS_KERNEL"
 echo "    Desktop   : $DESKTOP_ENV"
 echo "    Multilib  : $ENABLE_MULTILIB"
 echo "    Hostname  : $NEW_HOSTNAME"
 echo ""
 read -rp "  Press ENTER to continue..."
 echo ""
+
+# =============================================================================
+# CachyOS Repository
+# =============================================================================
+if [ "$USE_CACHYOS_KERNEL" = "yes" ]; then
+    info "============================================================"
+    info " CACHYOS REPOSITORY"
+    info "============================================================"
+    echo ""
+
+    info "Initializing pacman keyring..."
+    pacman-key --init
+
+    info "Importing CachyOS signing key..."
+    pacman-key --recv-keys F3B607488DB35A47 --keyserver keyserver.ubuntu.com
+
+    info "Locally signing CachyOS signing key..."
+    pacman-key --lsign-key F3B607488DB35A47
+
+    info "Installing CachyOS keyring and mirrorlist..."
+    pacman -U \
+        https://mirror.cachyos.org/repo/x86_64/cachyos/cachyos-keyring-20240331-1-any.pkg.tar.zst \
+        https://mirror.cachyos.org/repo/x86_64/cachyos/cachyos-mirrorlist-27-1-any.pkg.tar.zst \
+        --noconfirm
+
+    info "Adding CachyOS repository..."
+    echo '[cachyos]
+    Include = /etc/pacman.d/cachyos-mirrorlist' | tee -a /etc/pacman.conf
+
+    info "Refreshing package databases..."
+    pacman -Syy
+    echo ""
+fi
 
 # =============================================================================
 # Base install
@@ -229,7 +263,12 @@ if [ "$INIT_SYSTEM" = "systemd" ]; then
 
     info "Installing base and the kernel..."
     pacman -Sy archlinux-keyring --noconfirm
-    pacstrap /mnt base base-devel linux linux-firmware sof-firmware
+
+    if [ "$USE_CACHYOS_KERNEL" = "yes" ]; then
+        pacstrap /mnt base base-devel linux-cachyos linux-cachyos-headers linux-firmware sof-firmware
+    else
+        pacstrap /mnt base base-devel linux linux-firmware sof-firmware
+    fi
 
     info "Applying pacman tweaks to chroot..."
     sed -i 's/^#*ParallelDownloads = .*/ParallelDownloads = 12/' /mnt/etc/pacman.conf
@@ -293,8 +332,11 @@ EOF
         dinit)  INIT_PKGS="dinit elogind-dinit" ;;
     esac
 
-    pacstrap -C "$ARTIX_CONF" /mnt base base-devel linux linux-firmware sof-firmware \
-        artix-keyring artix-mirrorlist $INIT_PKGS
+    if [ "$USE_CACHYOS_KERNEL" = "yes" ]; then
+        pacstrap -C "$ARTIX_CONF" /mnt base base-devel linux-cachyos linux-cachyos-headers linux-firmware sof-firmware artix-keyring artix-mirrorlist $INIT_PKGS
+    else
+        pacstrap -C "$ARTIX_CONF" /mnt base base-devel linux linux-firmware sof-firmware artix-keyring artix-mirrorlist $INIT_PKGS
+    fi
 
     info "Fixing mirrorlist clobber and applying pacman tweaks..."
     
