@@ -373,6 +373,9 @@ pacman -Sy --noconfirm git
 pacman -S --noconfirm ttf-iosevka-nerd ttf-adwaitamono-nerd
 pacman -S --noconfirm fish flatpak
 pacman -S --noconfirm papirus-icon-theme
+mkdir -p /usr/share/icons/hicolor/scalable/apps/
+mkdir -p /usr/share/pixmaps/
+
 
 echo "\${NEW_HOSTNAME}" > /etc/hostname
 cat > /etc/hosts <<EOF
@@ -385,6 +388,7 @@ cat > /etc/os-release <<'EOF'
 NAME="Visnux"
 PRETTY_NAME="Visnux Linux"
 ID=visnux
+ID_LIKE=arch
 BUILD_ID=rolling
 ANSI_COLOR="38;2;85;255;85"
 HOME_URL="https://visnux.duckdns.org/"
@@ -540,6 +544,8 @@ sed -i 's/GRUB_DISTRIBUTOR="Artix"/GRUB_DISTRIBUTOR="Visnux"/' /etc/default/grub
 
 git clone https://github.com/realv1sta/larphub
 cp -r larphub/neveraskmewhatthisis/Office-sidebar /boot/grub/themes
+cp larphub/visnux.svg /usr/share/icons/hicolor/scalable/apps/visnux.svg
+cp larphub/visnux.svg /usr/share/pixmaps/visnux.svg
 rm -rf larphub
 
 echo 'GRUB_THEME=/boot/grub/themes/Office-sidebar/theme.txt' | tee -a /etc/default/grub
