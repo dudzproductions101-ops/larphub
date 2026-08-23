@@ -304,8 +304,8 @@ EOF
     pacman-key --init
     pacman-key --populate artix
 
-    ARTIX_CONF="/tmp/visnux-artix.conf"
-    cat > "$ARTIX_CONF" <<EOF
+ARTIX_CONF="/tmp/visnux-artix.conf"
+cat > "$ARTIX_CONF" <<EOF
 [options]
 Architecture = auto
 Color
@@ -321,6 +321,12 @@ Server = https://mirrors.rit.edu/artixlinux/\$repo/os/\$arch
 [galaxy]
 Server = https://mirrors.rit.edu/artixlinux/\$repo/os/\$arch
 EOF
+
+if [ "$USE_CACHYOS_KERNEL" = "yes" ]; then
+    echo '' >> "$ARTIX_CONF"
+    echo '[cachyos]' >> "$ARTIX_CONF"
+    echo 'Include = /etc/pacman.d/cachyos-mirrorlist' >> "$ARTIX_CONF"
+fi
 
     info "Bootstrapping Visnux (Artix base)..."
     command -v pacstrap &>/dev/null || die "'pacstrap' not found."
