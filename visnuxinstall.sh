@@ -383,7 +383,7 @@ EOF
 
 cat > /etc/os-release <<'EOF'
 NAME="Visnux"
-PRETTY_NAME="Visnux (Version 4.5)"
+PRETTY_NAME="Visnux Linux"
 ID=visnux
 BUILD_ID=rolling
 ANSI_COLOR="38;2;23;147;209"
@@ -529,7 +529,7 @@ info "Installing GRUB..."
 
 if [ "\${BOOT_MODE}" = "uefi" ]; then
     pacman -S --noconfirm grub efibootmgr
-    grub-install --target=x86_64-efi --efi-directory=/boot/efi
+    grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=visnux
 else
     pacman -S --noconfirm grub
     grub-install --recheck "\${GRUB_DISK}"
