@@ -394,7 +394,7 @@ else
             rc-update add elogind default
             rc-update add NetworkManager default
             rc-update add sddm default
-            rc-update add turnstiled default
+            rc-update add turnstile default
             ;;
         runit)
             mkdir -p /etc/runit/runsvdir/default
