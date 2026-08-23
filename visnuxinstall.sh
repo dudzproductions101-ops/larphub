@@ -160,11 +160,13 @@ while true; do
     ask "Desktop Environment?"
     ask "  1) KDE Plasma"
     ask "  2) Xfce4"
-    read -rp "  Choice [1-2]: " DE_CHOICE
+    ask "  3) Skip installing a Desktop Environment"
+    read -rp "  Choice [1-3]: " DE_CHOICE
     case "$DE_CHOICE" in
         1) DESKTOP_ENV="kde"; break ;;
         2) DESKTOP_ENV="xfce"; break ;;
-        *) warn "Invalid choice. Enter 1 or 2." ;;
+        3) DESKTOP_ENV="none"; break ;;
+        *) warn "Invalid choice. Enter 1, 2, or 3." ;;
     esac
 done
 echo ""
@@ -394,49 +396,86 @@ sed -i 's/^#en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen
 locale-gen
 echo "LANG=en_US.UTF-8" > /etc/locale.conf
 
+# =============================================================================
+# Desktop / system packages
+# =============================================================================
+
 if [ "\${INIT_SYSTEM}" = "systemd" ]; then
 
     if [ "\${DESKTOP_ENV}" = "kde" ]; then
         pacman -S plasma konsole dolphin kitty fastfetch sddm networkmanager vim nano sudo --noconfirm
-    else
-        pacman -S xfce4 xfce4-whiskermenu-plugin xfce4-pulseaudio-plugin kitty fastfetch sddm networkmanager vim nano sudo --noconfirm
-    fi
+        systemctl enable NetworkManager
+        systemctl enable sddm --force
 
-    systemctl enable NetworkManager
-    systemctl enable sddm --force
+    elif [ "\${DESKTOP_ENV}" = "xfce" ]; then
+        pacman -S xfce4 xfce4-whiskermenu-plugin xfce4-pulseaudio-plugin kitty fastfetch sddm networkmanager vim nano sudo --noconfirm
+        systemctl enable NetworkManager
+        systemctl enable sddm --force
+
+    else
+        info "Skipping Desktop Environment installation."
+        pacman -S networkmanager vim nano sudo --noconfirm
+        systemctl enable NetworkManager
+    fi
 
 else
 
     if [ "\${DESKTOP_ENV}" = "kde" ]; then
         DE_PKGS="plasma konsole dolphin"
-    else
+        DESKTOP_PKGS="kitty fastfetch sddm sddm-\${INIT_SYSTEM} pipewire pipewire-\${INIT_SYSTEM} pipewire-pulse pipewire-pulse-\${INIT_SYSTEM} wireplumber wireplumber-\${INIT_SYSTEM}"
+
+    elif [ "\${DESKTOP_ENV}" = "xfce" ]; then
         DE_PKGS="xorg-server xfce4 xfce4-whiskermenu-plugin xfce4-pulseaudio-plugin"
+        DESKTOP_PKGS="kitty fastfetch sddm sddm-\${INIT_SYSTEM} pipewire pipewire-\${INIT_SYSTEM} pipewire-pulse pipewire-pulse-\${INIT_SYSTEM} wireplumber wireplumber-\${INIT_SYSTEM}"
+
+    else
+        DE_PKGS=""
+        DESKTOP_PKGS=""
+        info "Skipping Desktop Environment installation."
     fi
 
-    pacman -S \${DE_PKGS} kitty fastfetch sddm sddm-\${INIT_SYSTEM} turnstile turnstile-\${INIT_SYSTEM} pipewire pipewire-\${INIT_SYSTEM} pipewire-pulse pipewire-pulse-\${INIT_SYSTEM} wireplumber wireplumber-\${INIT_SYSTEM} networkmanager networkmanager-\${INIT_SYSTEM} dbus dbus-\${INIT_SYSTEM} vim nano sudo --noconfirm
+    pacman -S \
+        \${DE_PKGS} \
+        \${DESKTOP_PKGS} \
+        turnstile turnstile-\${INIT_SYSTEM} \
+        networkmanager networkmanager-\${INIT_SYSTEM} \
+        dbus dbus-\${INIT_SYSTEM} \
+        vim nano sudo \
+        --noconfirm
 
     case "\${INIT_SYSTEM}" in
         openrc)
             rc-update add dbus default
             rc-update add elogind default
             rc-update add NetworkManager default
-            rc-update add sddm default
             rc-update add turnstile default
+            if [ "\${DESKTOP_ENV}" != "none" ]; then
+                rc-update add sddm default
+            fi
             ;;
+
         runit)
             mkdir -p /etc/runit/runsvdir/default
-            for service in dbus elogind NetworkManager sddm turnstiled; do
+            for service in dbus elogind NetworkManager turnstiled; do
                 if [ -d "/etc/runit/sv/\${service}" ] && [ ! -e "/etc/runit/runsvdir/default/\${service}" ]; then
                     ln -s "/etc/runit/sv/\${service}" "/etc/runit/runsvdir/default/\${service}"
                 fi
             done
+            if [ "\${DESKTOP_ENV}" != "none" ] &&
+               [ -d "/etc/runit/sv/sddm" ] &&
+               [ ! -e "/etc/runit/runsvdir/default/sddm" ]; then
+                ln -s /etc/runit/sv/sddm /etc/runit/runsvdir/default/sddm
+            fi
             ;;
+
         dinit)
             ln -s ../dbus /etc/dinit.d/boot.d/
             ln -s ../elogind /etc/dinit.d/boot.d/
             ln -s ../NetworkManager /etc/dinit.d/boot.d/
-            ln -s ../sddm /etc/dinit.d/boot.d/
             ln -s ../turnstiled /etc/dinit.d/boot.d/
+            if [ "\${DESKTOP_ENV}" != "none" ]; then
+                ln -s ../sddm /etc/dinit.d/boot.d/
+            fi
             ;;
     esac
 
@@ -464,7 +503,7 @@ if [ "\${USE_CACHYOS_KERNEL}" = "yes" ]; then
         >> /etc/pacman.conf
 
     pacman -Syy --noconfirm
-    pacman -S --noconfirm linux-cachyos linux-cachyos-headers linux-firmware
+    pacman -S --noconfirm linux-cachyos linux-cachyos-headers linux-firmware --noreplace
 fi
 
 # =============================================================================
