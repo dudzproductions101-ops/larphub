@@ -130,6 +130,25 @@ done
 echo ""
 
 # =============================================================================
+# CachyOS Kernel selection
+# =============================================================================
+while true; do
+    ask "Do you want to use the CachyOS Kernel? (Y/n)"
+    read -rp "  Choice: " CACHYOS_KERNEL_CHOICE
+
+    if [[ "$CACHYOS_KERNEL_CHOICE" =~ ^[Yy]$ ]] || [ -z "$CACHYOS_KERNEL_CHOICE" ]; then
+        USE_CACHYOS_KERNEL="yes"
+        break
+    elif [[ "$CACHYOS_KERNEL_CHOICE" =~ ^[Nn]$ ]]; then
+        USE_CACHYOS_KERNEL="no"
+        break
+    else
+        warn "Please enter y or n."
+    fi
+done
+echo ""
+
+# =============================================================================
 # Desktop Environment selection
 # =============================================================================
 info "============================================================"
