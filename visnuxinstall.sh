@@ -503,7 +503,7 @@ if [ "\${USE_CACHYOS_KERNEL}" = "yes" ]; then
         >> /etc/pacman.conf
 
     pacman -Syy --noconfirm
-    pacman -S --noconfirm linux-cachyos linux-cachyos-headers linux-firmware --noreplace
+    pacman -S --noconfirm linux-cachyos linux-cachyos-headers linux-firmware --needed
 fi
 
 # =============================================================================
