@@ -427,6 +427,10 @@ fi
 
 sed -i 's/GRUB_DISTRIBUTOR="Arch"/GRUB_DISTRIBUTOR="Visnux"/' /etc/default/grub
 sed -i 's/GRUB_DISTRIBUTOR="Artix"/GRUB_DISTRIBUTOR="Visnux"/' /etc/default/grub
+git clone https://github.com/realv1sta/larphub
+cp -r larphub/neveraskmewhatthisis/Office-sidebar /boot/grub/themes
+rm -rf larphub
+echo 'GRUB_THEME=/boot/grub/themes/Office-sidebar/theme.txt' | tee -a /etc/default/grub
 grub-mkconfig -o /boot/grub/grub.cfg
 
 echo ""
