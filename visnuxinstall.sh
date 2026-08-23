@@ -215,39 +215,6 @@ read -rp "  Press ENTER to continue..."
 echo ""
 
 # =============================================================================
-# CachyOS Repository
-# =============================================================================
-if [ "$USE_CACHYOS_KERNEL" = "yes" ]; then
-    info "============================================================"
-    info " CACHYOS REPOSITORY"
-    info "============================================================"
-    echo ""
-
-    info "Initializing pacman keyring..."
-    pacman-key --init
-
-    info "Importing CachyOS signing key..."
-    pacman-key --recv-keys F3B607488DB35A47 --keyserver keyserver.ubuntu.com
-
-    info "Locally signing CachyOS signing key..."
-    pacman-key --lsign-key F3B607488DB35A47
-
-    info "Installing CachyOS keyring and mirrorlist..."
-    pacman -U \
-        https://mirror.cachyos.org/repo/x86_64/cachyos/cachyos-keyring-20240331-1-any.pkg.tar.zst \
-        https://mirror.cachyos.org/repo/x86_64/cachyos/cachyos-mirrorlist-27-1-any.pkg.tar.zst \
-        --noconfirm
-
-    info "Adding CachyOS repository..."
-    echo '[cachyos]
-    Include = /etc/pacman.d/cachyos-mirrorlist' | tee -a /etc/pacman.conf
-
-    info "Refreshing package databases..."
-    pacman -Syy
-    echo ""
-fi
-
-# =============================================================================
 # Base install
 # =============================================================================
 info "============================================================"
@@ -257,7 +224,7 @@ echo ""
 
 if [ "$INIT_SYSTEM" = "systemd" ]; then
     command -v pacstrap &>/dev/null || die "'pacstrap' not found."
-    
+
     info "Enabling parallel downloads on host..."
     sed -i 's/^#*ParallelDownloads = .*/ParallelDownloads = 12/' /etc/pacman.conf
 
@@ -265,7 +232,7 @@ if [ "$INIT_SYSTEM" = "systemd" ]; then
     pacman -Sy archlinux-keyring --noconfirm
 
     if [ "$USE_CACHYOS_KERNEL" = "yes" ]; then
-        pacstrap /mnt base base-devel linux-cachyos linux-cachyos-headers linux-firmware sof-firmware
+        pacstrap /mnt base base-devel linux-firmware sof-firmware
     else
         pacstrap /mnt base base-devel linux linux-firmware sof-firmware
     fi
@@ -304,8 +271,8 @@ EOF
     pacman-key --init
     pacman-key --populate artix
 
-ARTIX_CONF="/tmp/visnux-artix.conf"
-cat > "$ARTIX_CONF" <<EOF
+    ARTIX_CONF="/tmp/visnux-artix.conf"
+    cat > "$ARTIX_CONF" <<EOF
 [options]
 Architecture = auto
 Color
@@ -322,15 +289,9 @@ Server = https://mirrors.rit.edu/artixlinux/\$repo/os/\$arch
 Server = https://mirrors.rit.edu/artixlinux/\$repo/os/\$arch
 EOF
 
-if [ "$USE_CACHYOS_KERNEL" = "yes" ]; then
-    echo '' >> "$ARTIX_CONF"
-    echo '[cachyos]' >> "$ARTIX_CONF"
-    echo 'Include = /etc/pacman.d/cachyos-mirrorlist' >> "$ARTIX_CONF"
-fi
-
-    info "Bootstrapping Visnux (Artix base)..."
+    info "Bootstrapping Visnux..."
     command -v pacstrap &>/dev/null || die "'pacstrap' not found."
-    
+
     INIT_PKGS=""
     case "$INIT_SYSTEM" in
         openrc) INIT_PKGS="openrc elogind-openrc" ;;
@@ -339,18 +300,16 @@ fi
     esac
 
     if [ "$USE_CACHYOS_KERNEL" = "yes" ]; then
-        pacstrap -C "$ARTIX_CONF" /mnt base base-devel linux-cachyos linux-cachyos-headers linux-firmware sof-firmware artix-keyring artix-mirrorlist $INIT_PKGS
+        pacstrap -C "$ARTIX_CONF" /mnt base base-devel linux-firmware sof-firmware artix-keyring artix-mirrorlist $INIT_PKGS
     else
         pacstrap -C "$ARTIX_CONF" /mnt base base-devel linux linux-firmware sof-firmware artix-keyring artix-mirrorlist $INIT_PKGS
     fi
 
-    info "Fixing mirrorlist clobber and applying pacman tweaks..."
-    
     echo 'Server = https://mirrors.rit.edu/artixlinux/$repo/os/$arch' > /mnt/etc/pacman.d/mirrorlist
 
     sed -i 's/^#*ParallelDownloads = .*/ParallelDownloads = 12/' /mnt/etc/pacman.conf
     sed -i '/^ParallelDownloads = 12/a Color\nILoveCandy' /mnt/etc/pacman.conf
-    
+
     arch-chroot /mnt pacman -Sy --noconfirm artix-mirrorlist
 
     info "Installing Arch repository support inside the chroot..."
@@ -404,6 +363,7 @@ INIT_SYSTEM="${INIT_SYSTEM}"
 DESKTOP_ENV="${DESKTOP_ENV}"
 NEW_HOSTNAME="${NEW_HOSTNAME}"
 GRUB_DISK="${GRUB_DISK}"
+USE_CACHYOS_KERNEL="${USE_CACHYOS_KERNEL}"
 
 hwclock --systohc
 
@@ -472,15 +432,44 @@ else
             done
             ;;
         dinit)
-        ln -s ../dbus            /etc/dinit.d/boot.d/
-        ln -s ../elogind         /etc/dinit.d/boot.d/
-        ln -s ../NetworkManager /etc/dinit.d/boot.d/
-        ln -s ../sddm            /etc/dinit.d/boot.d/
-        ln -s ../turnstiled      /etc/dinit.d/boot.d/
+            ln -s ../dbus /etc/dinit.d/boot.d/
+            ln -s ../elogind /etc/dinit.d/boot.d/
+            ln -s ../NetworkManager /etc/dinit.d/boot.d/
+            ln -s ../sddm /etc/dinit.d/boot.d/
+            ln -s ../turnstiled /etc/dinit.d/boot.d/
             ;;
     esac
 
 fi
+
+# =============================================================================
+# CachyOS Kernel
+# =============================================================================
+
+if [ "\${USE_CACHYOS_KERNEL}" = "yes" ]; then
+    info "Installing CachyOS kernel..."
+
+    pacman-key --init
+    pacman-key --recv-keys F3B607488DB35A47 --keyserver keyserver.ubuntu.com
+    pacman-key --lsign-key F3B607488DB35A47
+
+    pacman -U \
+        https://mirror.cachyos.org/repo/x86_64/cachyos/cachyos-keyring-20240331-1-any.pkg.tar.zst \
+        https://mirror.cachyos.org/repo/x86_64/cachyos/cachyos-mirrorlist-27-1-any.pkg.tar.zst \
+        --noconfirm
+
+    printf '%s\n' \
+        '[cachyos]' \
+        'Include = /etc/pacman.d/cachyos-mirrorlist' \
+        >> /etc/pacman.conf
+
+    pacman -Syy --noconfirm
+    pacman -S --noconfirm linux-cachyos linux-cachyos-headers linux-firmware
+fi
+
+# =============================================================================
+# GRUB
+# =============================================================================
 
 info "Installing GRUB..."
 
@@ -494,9 +483,11 @@ fi
 
 sed -i 's/GRUB_DISTRIBUTOR="Arch"/GRUB_DISTRIBUTOR="Visnux"/' /etc/default/grub
 sed -i 's/GRUB_DISTRIBUTOR="Artix"/GRUB_DISTRIBUTOR="Visnux"/' /etc/default/grub
+
 git clone https://github.com/realv1sta/larphub
 cp -r larphub/neveraskmewhatthisis/Office-sidebar /boot/grub/themes
 rm -rf larphub
+
 echo 'GRUB_THEME=/boot/grub/themes/Office-sidebar/theme.txt' | tee -a /etc/default/grub
 grub-mkconfig -o /boot/grub/grub.cfg
 
@@ -504,6 +495,7 @@ echo ""
 info "============================================================"
 info " Set the ROOT password:"
 info "============================================================"
+
 while ! passwd; do
     warn "Password change failed or passwords did not match. Please try again."
 done
@@ -513,12 +505,15 @@ echo -e "\${CYAN}[INPUT]\${NC} Would you like to create a new user? (y/n)"
 read -rp "  Choice: " CREATE_USER
 
 if [[ "\${CREATE_USER}" =~ ^[Yy]$ ]]; then
+
     while true; do
         echo -e "\${CYAN}[INPUT]\${NC} Enter the new username:"
         read -rp "  Username: " NEW_USER
+
         if [ -n "\${NEW_USER}" ]; then
             break
         fi
+
         warn "Username cannot be empty. Please try again."
     done
 
@@ -526,15 +521,18 @@ if [[ "\${CREATE_USER}" =~ ^[Yy]$ ]]; then
     chmod 440 /etc/sudoers.d/wheel
 
     useradd -m -G wheel,audio,video,input -s /bin/bash "\${NEW_USER}"
+
     info "User '\${NEW_USER}' created and added to: wheel, audio, video, input"
     info "Set a password for '\${NEW_USER}':"
-    
+
     while ! passwd "\${NEW_USER}"; do
         warn "Password change failed or passwords did not match. Please try again."
     done
 
     info "Cloning and setting up dotfiles for '\${NEW_USER}'..."
+
     su - "\${NEW_USER}" -c "cd ~ && mkdir -p ~/.config && git clone https://github.com/beamyyl/maindots && cp -r maindots/* ~/.config/ && rm -rf maindots && [ ! -f ~/.config/fastfetch/config.jsonc ] || sed -i 's/\"top\": 2/\"top\": 0/' ~/.config/fastfetch/config.jsonc"
+
     info "Dotfiles installed successfully."
     info "User setup complete."
 
