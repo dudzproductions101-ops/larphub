@@ -371,7 +371,7 @@ hwclock --systohc
 
 pacman -Sy --noconfirm git
 pacman -S --noconfirm ttf-iosevka-nerd ttf-adwaitamono-nerd
-pacman -S --noconfirm fish
+pacman -S --noconfirm fish flatpak
 pacman -S --noconfirm papirus-icon-theme
 
 echo "\${NEW_HOSTNAME}" > /etc/hostname
