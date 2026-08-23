@@ -386,11 +386,8 @@ PRETTY_NAME="Visnux (Version 4.5)"
 ID=visnux
 BUILD_ID=rolling
 ANSI_COLOR="38;2;23;147;209"
-HOME_URL="https://visnux.org/"
-DOCUMENTATION_URL="https://wiki.visnux.org/"
-SUPPORT_URL="https://bbs.visnux.org/"
-BUG_REPORT_URL="https://gitlab.visnux.org/groups/visnux/-/issues"
-PRIVACY_POLICY_URL="https://terms.visnux.org/docs/privacy-policy/"
+HOME_URL="https://visnux.duckdns.org/"
+DOCUMENTATION_URL="https://visnux.duckdns.org/"
 LOGO=visnux
 EOF
 
