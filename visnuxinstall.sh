@@ -370,6 +370,7 @@ USE_CACHYOS_KERNEL="${USE_CACHYOS_KERNEL}"
 hwclock --systohc
 
 pacman -Sy --noconfirm git
+pacman -S --noconfirm ttf-iosevka-nerd ttf-adwaitamono-nerd
 
 echo "\${NEW_HOSTNAME}" > /etc/hostname
 cat > /etc/hosts <<EOF
