@@ -72,7 +72,7 @@ Recognition for the people who make this repo worth starring.
 <table>
   <tr>
     <td>✍🏻</td>
-    <td><b>Visnux' installer</b> <code>visnuxinstall.sh</code></td>
+    <td><b>Visnux' official installer</b> <code>visnuxinstall.sh</code></td>
     <td>Credit: <a href="https://github.com/beamyyl"><b>@beamyyl</b></a></td>
   </tr>
 </table>
