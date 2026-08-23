@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Cursor Maze Game</title>
+  <title>Randomized Cursor Maze</title>
   <style>
     * {
       box-sizing: border-box;
@@ -25,14 +25,14 @@
     }
 
     .header {
-      margin-bottom: 20px;
+      margin-bottom: 16px;
       text-align: center;
     }
 
     .header h1 {
       font-size: 2rem;
-      margin-bottom: 8px;
-      color: #4f46e5;
+      color: #6366f1;
+      margin-bottom: 4px;
     }
 
     .header p {
@@ -44,70 +44,63 @@
       position: relative;
       width: 600px;
       height: 400px;
-      background-color: #1e1e24;
+      background-color: #18181b;
       border: 3px solid #3f3f46;
       border-radius: 8px;
-      overflow: hidden;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
       cursor: crosshair;
     }
 
-    /* Maze Walls */
-    .wall {
+    canvas {
+      display: block;
+      border-radius: 5px;
+    }
+
+    /* Start and Exit Zones */
+    .zone {
       position: absolute;
-      background-color: #ef4444;
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      font-size: 0.75rem;
       border-radius: 4px;
-      transition: background-color 0.2s;
+      letter-spacing: 0.5px;
     }
 
-    /* Start Zone */
     #start {
-      position: absolute;
-      top: 20px;
-      left: 20px;
-      width: 60px;
-      height: 60px;
+      top: 0;
+      left: 0;
       background-color: #3b82f6;
-      border-radius: 6px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: bold;
-      font-size: 0.85rem;
-      color: #fff;
+      color: #ffffff;
+      z-index: 2;
     }
 
-    /* Goal Zone */
-    #goal {
-      position: absolute;
-      bottom: 20px;
-      right: 20px;
-      width: 60px;
-      height: 60px;
+    #exit {
+      bottom: 0;
+      right: 0;
       background-color: #10b981;
-      border-radius: 6px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: bold;
-      font-size: 0.85rem;
-      color: #fff;
+      color: #ffffff;
+      z-index: 2;
       opacity: 0.5;
       pointer-events: none;
     }
 
-    #goal.active {
+    #exit.active {
       opacity: 1;
       pointer-events: auto;
     }
 
-    /* Overlay Screen (Game Over / Win) */
+    /* Overlay Screens */
     .overlay {
       position: absolute;
       top: 0;
       left: 0;
       width: 100%;
       height: 100%;
-      background: rgba(0, 0, 0, 0.85);
+      background: rgba(9, 9, 11, 0.88);
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -128,34 +121,33 @@
       margin-bottom: 12px;
     }
 
-    .overlay.win h2 {
-      color: #10b981;
-    }
+    .overlay.win h2 { color: #10b981; }
+    .overlay.lose h2 { color: #ef4444; }
 
-    .overlay.lose h2 {
-      color: #ef4444;
+    .controls {
+      margin-top: 16px;
+      display: flex;
+      gap: 12px;
     }
 
     .btn {
-      margin-top: 15px;
       padding: 10px 20px;
-      font-size: 1rem;
+      font-size: 0.95rem;
       font-weight: 600;
       background-color: #4f46e5;
       color: white;
       border: none;
       border-radius: 6px;
       cursor: pointer;
-      transition: background-color 0.2s;
+      transition: background-color 0.2s, transform 0.1s;
     }
 
-    .btn:hover {
-      background-color: #4338ca;
-    }
+    .btn:hover { background-color: #4338ca; }
+    .btn:active { transform: scale(0.98); }
 
     .status {
-      margin-top: 15px;
-      font-size: 1.1rem;
+      margin-top: 12px;
+      font-size: 1.05rem;
       font-weight: 500;
       height: 24px;
       color: #e4e4e7;
@@ -165,74 +157,193 @@
 <body>
 
   <div class="header">
-    <h1>Cursor Maze</h1>
-    <p>Hover over <strong>START</strong> to begin. Reach <strong>GOAL</strong> without touching the walls!</p>
+    <h1>Randomized Cursor Maze</h1>
+    <p>Hover over <strong>START</strong> to begin, then find the path to the <strong>EXIT</strong>!</p>
   </div>
 
-  <div class="game-container" id="maze">
-    <div id="start">START</div>
-    <div id="goal">GOAL</div>
+  <div class="game-container" id="game-container">
+    <div id="start" class="zone">START</div>
+    <div id="exit" class="zone">EXIT</div>
+    <canvas id="mazeCanvas" width="600" height="400"></canvas>
 
-    <!-- Walls making up the maze path -->
-    <div class="wall" style="top: 0; left: 100px; width: 20px; height: 300px;"></div>
-    <div class="wall" style="top: 100px; left: 200px; width: 20px; height: 300px;"></div>
-    <div class="wall" style="top: 0; left: 300px; width: 20px; height: 280px;"></div>
-    <div class="wall" style="top: 120px; left: 400px; width: 20px; height: 280px;"></div>
-    <div class="wall" style="top: 0; left: 500px; width: 20px; height: 300px;"></div>
-    
-    <div class="wall" style="top: 280px; left: 300px; width: 120px; height: 20px;"></div>
-    <div class="wall" style="top: 100px; left: 120px; width: 100px; height: 20px;"></div>
-
-    <!-- Overlay Screen -->
+    <!-- Overlay -->
     <div class="overlay" id="overlay">
       <h2 id="overlay-title">Game Over</h2>
-      <p id="overlay-msg">You hit a wall!</p>
-      <button class="btn" onclick="resetGame()">Try Again</button>
+      <p id="overlay-msg">You touched a wall!</p>
+      <div class="controls">
+        <button class="btn" onclick="retryMaze()">Try Again</button>
+        <button class="btn" style="background-color: #27272a;" onclick="generateNewMaze()">New Maze</button>
+      </div>
     </div>
   </div>
 
   <div class="status" id="status-text">Hover over START to begin</div>
 
   <script>
+    const canvas = document.getElementById('mazeCanvas');
+    const ctx = canvas.getContext('2d', { willReadFrequently: true });
+    const container = document.getElementById('game-container');
     const startZone = document.getElementById('start');
-    const goalZone = document.getElementById('goal');
-    const maze = document.getElementById('maze');
-    const walls = document.querySelectorAll('.wall');
+    const exitZone = document.getElementById('exit');
     const overlay = document.getElementById('overlay');
     const overlayTitle = document.getElementById('overlay-title');
     const overlayMsg = document.getElementById('overlay-msg');
     const statusText = document.getElementById('status-text');
 
+    const width = 600;
+    const height = 400;
+    const cols = 15;
+    const rows = 10;
+    const cellW = width / cols;
+    const cellH = height / rows;
+
+    let grid = [];
     let isPlaying = false;
 
-    // Start game on hover
+    class Cell {
+      constructor(c, r) {
+        this.c = c;
+        this.r = r;
+        // Top, Right, Bottom, Left
+        this.walls = [true, true, true, true];
+        this.visited = false;
+      }
+
+      checkNeighbors() {
+        let neighbors = [];
+        let { c, r } = this;
+
+        let top    = grid[index(c, r - 1)];
+        let right  = grid[index(c + 1, r)];
+        let bottom = grid[index(c, r + 1)];
+        let left   = grid[index(c - 1, r)];
+
+        if (top && !top.visited) neighbors.push(top);
+        if (right && !right.visited) neighbors.push(right);
+        if (bottom && !bottom.visited) neighbors.push(bottom);
+        if (left && !left.visited) neighbors.push(left);
+
+        if (neighbors.length > 0) {
+          let rIdx = Math.floor(Math.random() * neighbors.length);
+          return neighbors[rIdx];
+        }
+        return undefined;
+      }
+    }
+
+    function index(c, r) {
+      if (c < 0 || r < 0 || c >= cols || r >= rows) return -1;
+      return c + r * cols;
+    }
+
+    function removeWalls(a, b) {
+      let x = a.c - b.c;
+      if (x === 1) { a.walls[3] = false; b.walls[1] = false; }
+      else if (x === -1) { a.walls[1] = false; b.walls[3] = false; }
+
+      let y = a.r - b.r;
+      if (y === 1) { a.walls[0] = false; b.walls[2] = false; }
+      else if (y === -1) { a.walls[2] = false; b.walls[0] = false; }
+    }
+
+    // Depth-First Search Maze Generator
+    function generateMaze() {
+      grid = [];
+      for (let r = 0; r < rows; r++) {
+        for (let c = 0; c < cols; c++) {
+          grid.push(new Cell(c, r));
+        }
+      }
+
+      let current = grid[0];
+      current.visited = true;
+      let stack = [];
+
+      while (true) {
+        let next = current.checkNeighbors();
+        if (next) {
+          next.visited = true;
+          stack.push(current);
+          removeWalls(current, next);
+          current = next;
+        } else if (stack.length > 0) {
+          current = stack.pop();
+        } else {
+          break;
+        }
+      }
+      drawMaze();
+    }
+
+    function drawMaze() {
+      ctx.clearRect(0, 0, width, height);
+      ctx.fillStyle = '#18181b';
+      ctx.fillRect(0, 0, width, height);
+
+      ctx.strokeStyle = '#ef4444'; // Red obstacle walls
+      ctx.lineWidth = 6;
+      ctx.lineCap = 'round';
+
+      for (let cell of grid) {
+        let x = cell.c * cellW;
+        let y = cell.r * cellH;
+
+        ctx.beginPath();
+        if (cell.walls[0]) { ctx.moveTo(x, y); ctx.lineTo(x + cellW, y); } // Top
+        if (cell.walls[1]) { ctx.moveTo(x + cellW, y); ctx.lineTo(x + cellW, y + cellH); } // Right
+        if (cell.walls[2]) { ctx.moveTo(x + cellW, y + cellH); ctx.lineTo(x, y + cellH); } // Bottom
+        if (cell.walls[3]) { ctx.moveTo(x, y + cellH); ctx.lineTo(x, y); } // Left
+        ctx.stroke();
+      }
+    }
+
+    // Collision Detection using Canvas pixel reading
+    function checkCollision(e) {
+      if (!isPlaying) return;
+
+      const rect = canvas.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+
+      // Ensure cursor is within canvas limits
+      if (x < 0 || y < 0 || x >= width || y >= height) {
+        endGame(false, "You moved outside the maze!");
+        return;
+      }
+
+      // Read a 3x3 pixel grid around the cursor to catch thin walls
+      const pixelData = ctx.getImageData(x - 1, y - 1, 3, 3).data;
+      for (let i = 0; i < pixelData.length; i += 4) {
+        let r = pixelData[i];
+        let g = pixelData[i + 1];
+        let b = pixelData[i + 2];
+
+        // Detect Red Wall pixels (r > 150, low g & b)
+        if (r > 150 && g < 100 && b < 100) {
+          endGame(false, "You hit a wall!");
+          break;
+        }
+      }
+    }
+
+    // Event Listeners
     startZone.addEventListener('mouseenter', () => {
       if (!isPlaying) {
         isPlaying = true;
-        goalZone.classList.add('active');
-        statusText.textContent = "Navigate carefully to the GOAL!";
+        exitZone.classList.add('active');
+        statusText.textContent = "Navigate to the EXIT!";
         statusText.style.color = "#3b82f6";
       }
     });
 
-    // Detect collision with walls
-    walls.forEach(wall => {
-      wall.addEventListener('mouseenter', () => {
-        if (isPlaying) {
-          endGame(false);
-        }
-      });
-    });
-
-    // Detect reaching goal
-    goalZone.addEventListener('mouseenter', () => {
+    exitZone.addEventListener('mouseenter', () => {
       if (isPlaying) {
         endGame(true);
       }
     });
 
-    // Detect leaving the maze boundary entirely
-    maze.addEventListener('mouseleave', () => {
+    container.addEventListener('mousemove', checkCollision);
+    container.addEventListener('mouseleave', () => {
       if (isPlaying) {
         endGame(false, "You left the game area!");
       }
@@ -240,13 +351,13 @@
 
     function endGame(isWin, customMsg) {
       isPlaying = false;
-      goalZone.classList.remove('active');
+      exitZone.classList.remove('active');
       overlay.classList.add('visible');
 
       if (isWin) {
         overlay.className = "overlay visible win";
-        overlayTitle.textContent = "You Win!";
-        overlayMsg.textContent = "Great precision!";
+        overlayTitle.textContent = "Level Cleared!";
+        overlayMsg.textContent = "You successfully found the exit!";
         statusText.textContent = "Victory!";
         statusText.style.color = "#10b981";
       } else {
@@ -258,11 +369,19 @@
       }
     }
 
-    function resetGame() {
+    function retryMaze() {
       overlay.classList.remove('visible');
       statusText.textContent = "Hover over START to begin";
       statusText.style.color = "#e4e4e7";
     }
+
+    function generateNewMaze() {
+      retryMaze();
+      generateMaze();
+    }
+
+    // Initialize on load
+    generateMaze();
   </script>
 </body>
 </html>
