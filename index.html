@@ -98,16 +98,37 @@
         }
 
         /* Announcement Banner */
-        .announcement-banner {
-            display: none;
-            background-color: var(--box-bg);
-            border: 1px solid var(--accent-red);
-            border-left: 5px solid var(--accent-red);
-            border-radius: 4px;
-            padding: 12px 16px;
-            margin-bottom: 2rem;
-            font-weight: 500;
+<!-- Announcement / Maintenance Banner -->
+    <div class="announcement-banner" id="announcementBanner"></div>
+
+    <script>
+        // Fetch live announcement automatically
+        async function checkAnnouncement() {
+            try {
+                // cache: "no-store" ensures browsers don't cache old messages
+                const response = await fetch("announcement.json?t=" + new Date().getTime(), { cache: "no-store" });
+                if (!response.ok) return;
+
+                const data = await response.json();
+                const banner = document.getElementById("announcementBanner");
+
+                if (data.active && data.message.trim() !== "") {
+                    banner.innerHTML = `📢 <strong>Announcement:</strong> ${data.message}`;
+                    banner.style.display = "block";
+                } else {
+                    banner.style.display = "none";
+                }
+            } catch (err) {
+                console.error("Failed to load announcement:", err);
+            }
         }
+
+        // Run immediately when page loads
+        checkAnnouncement();
+
+        // Check for updates every 5 seconds automatically
+        setInterval(checkAnnouncement, 5000);
+    </script>
 
         /* Theme Toggle Button */
         .theme-toggle-btn {
