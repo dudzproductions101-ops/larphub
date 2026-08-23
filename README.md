@@ -67,6 +67,10 @@ Recognition for the people who make this repo worth starring.
     <td>🖼️</td>
     <td><b>Walls Collection</b> <code>/walls</code></td>
     <td>Credit: <a href="https://github.com/beamyyl"><b>@beamyyl</b></a></td>
+  </tr>
+</table>
+<table>
+  <tr>
     <td>✍🏻</td>
     <td><b>Visnux' installer</b> <code>visnuxinstall.sh</code></td>
     <td>Credit: <a href="https://github.com/beamyyl"><b>@beamyyl</b></a></td>
