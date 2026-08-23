@@ -351,7 +351,7 @@ EOF
 
 cat > /etc/os-release <<'EOF'
 NAME="Visnux"
-PRETTY_NAME="Visnux (Version Yes.)"
+PRETTY_NAME="Visnux (Version 4.5)"
 ID=visnux
 BUILD_ID=rolling
 ANSI_COLOR="38;2;23;147;209"
