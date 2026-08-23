@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visnux Admin Panel</title>
+    <link rel="icon" type="image/png" href="logo.png">
+    <style>
+        :root {
+            --bg-color: #0d1117;
+            --text-color: #c9d1d9;
+            --heading-color: #f0f6fc;
+            --border-color: #30363d;
+            --accent-red: #ff3333;
+            --box-bg: #161b22;
+            --btn-bg: #21262d;
+            --btn-text: #c9d1d9;
+            --btn-border: #363b42;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 2rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 80vh;
+        }
+
+        /* Login Box */
+        .login-box {
+            background-color: var(--box-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 2rem;
+            width: 100%;
+            max-width: 360px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+            text-align: center;
+        }
+
+        .login-box h2 {
+            margin-top: 0;
+            color: var(--heading-color);
+            border-bottom: 2px solid var(--accent-red);
+            padding-bottom: 0.5rem;
+            font-family: monospace;
+        }
+
+        input[type="password"], textarea {
+            width: 90%;
+            padding: 10px;
+            margin: 0.8rem 0;
+            background-color: var(--bg-color);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            color: var(--text-color);
+            font-size: 0.9rem;
+            font-family: inherit;
+            outline: none;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        input[type="password"]:focus, textarea:focus {
+            border-color: #58a6ff;
+        }
+
+        button {
+            padding: 10px 16px;
+            background-color: var(--btn-bg);
+            color: var(--btn-text);
+            border: 1px solid var(--btn-border);
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        button:hover {
+            background-color: #30363d;
+        }
+
+        .btn-danger {
+            background-color: var(--accent-red);
+            color: #fff;
+            border: none;
+        }
+
+        .btn-danger:hover {
+            background-color: #d73a49;
+        }
+
+        .error-msg {
+            color: var(--accent-red);
+            font-size: 0.85rem;
+            margin-top: 0.8rem;
+            display: none;
+        }
+
+        /* Main Admin Content Container */
+        .admin-content {
+            display: none;
+            width: 100%;
+            max-width: 850px;
+        }
+
+        .admin-header {
+            border-bottom: 2px solid var(--accent-red);
+            padding-bottom: 0.8rem;
+            margin-bottom: 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .admin-header h1 {
+            font-family: monospace;
+            margin: 0;
+            color: var(--heading-color);
+        }
+
+        .card {
+            background-color: var(--box-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        a {
+            color: #58a6ff;
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        .status-text {
+            color: #7ee787;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Login Overlay -->
+    <div class="login-box" id="loginBox">
+        <h2>visnux / admin</h2>
+        <p style="font-size: 0.85rem; color: #8b949e;">Enter password to access dashboard</p>
+        <input type="password" id="passwordInput" placeholder="Password" onkeydown="if(event.key==='Enter') checkPassword()">
+        <button style="width: 98%;" onclick="checkPassword()">Unlock Panel</button>
+        <div class="error-msg" id="errorMsg">Access Denied: Invalid Password</div>
+    </div>
+
+    <!-- Hidden Admin Dashboard -->
+    <div class="admin-content" id="adminContent">
+        <div class="admin-header">
+            <h1>visnux / admin dashboard</h1>
+            <a href="index.html">View index.html</a>
+        </div>
+
+        <div class="card">
+            <h3>📢 Broadcast Announcement</h3>
+            <p>Write a custom message or trigger a quick maintenance notice to show on <code>index.html</code>:</p>
+            
+            <textarea id="announcementText" placeholder="Type custom announcement here..."></textarea>
+            
+            <div class="btn-group">
+                <button onclick="postAnnouncement()">Post Custom Announcement</button>
+                <button onclick="postBeRightBack()">Post "We will be right back!"</button>
+                <button class="btn-danger" onclick="clearAnnouncement()">Clear Banner</button>
+            </div>
+            
+            <p id="postStatus" class="status-text" style="display: none; margin-top: 10px;"></p>
+        </div>
+    </div>
+
+    <script>
+        const SECRET_PASS = "adminpanel123123123verysecret";
+
+        function checkPassword() {
+            const input = document.getElementById("passwordInput").value;
+            const errorMsg = document.getElementById("errorMsg");
+
+            if (input === SECRET_PASS) {
+                document.getElementById("loginBox").style.display = "none";
+                document.getElementById("adminContent").style.display = "block";
+            } else {
+                errorMsg.style.display = "block";
+            }
+        }
+
+        function updateStatus(text) {
+            const status = document.getElementById("postStatus");
+            status.textContent = text;
+            status.style.display = "block";
+            setTimeout(() => { status.style.display = "none"; }, 3000);
+        }
+
+        function postAnnouncement() {
+            const text = document.getElementById("announcementText").value;
+            if (text.trim() !== "") {
+                localStorage.setItem("visnux_announcement", text);
+                updateStatus("Announcement updated on index.html!");
+            }
+        }
+
+        function postBeRightBack() {
+            const msg = "We will be right back!";
+            localStorage.setItem("visnux_announcement", msg);
+            document.getElementById("announcementText").value = msg;
+            updateStatus("Posted 'We will be right back!' to index.html!");
+        }
+
+        function clearAnnouncement() {
+            localStorage.removeItem("visnux_announcement");
+            document.getElementById("announcementText").value = "";
+            updateStatus("Banner cleared from index.html!");
+        }
+    </script>
+
+</body>
+</html>
