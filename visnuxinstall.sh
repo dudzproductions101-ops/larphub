@@ -402,18 +402,18 @@ echo "LANG=en_US.UTF-8" > /etc/locale.conf
 if [ "\${INIT_SYSTEM}" = "systemd" ]; then
 
     if [ "\${DESKTOP_ENV}" = "kde" ]; then
-        pacman -S plasma konsole dolphin kitty fastfetch sddm networkmanager vim nano sudo --noconfirm
+        pacman -S plasma konsole dolphin kitty fastfetch sddm networkmanager neovim nano sudo power-profiles-daemon --noconfirm
         systemctl enable NetworkManager
         systemctl enable sddm --force
 
     elif [ "\${DESKTOP_ENV}" = "xfce" ]; then
-        pacman -S xfce4 xfce4-whiskermenu-plugin xfce4-pulseaudio-plugin kitty fastfetch sddm networkmanager vim nano sudo --noconfirm
+        pacman -S xfce4 xfce4-whiskermenu-plugin xfce4-pulseaudio-plugin kitty fastfetch sddm networkmanager neovim nano sudo power-profiles-daemon --noconfirm
         systemctl enable NetworkManager
         systemctl enable sddm --force
 
     else
         info "Skipping Desktop Environment installation."
-        pacman -S networkmanager vim nano sudo --noconfirm
+        pacman -S networkmanager neovim nano sudo --noconfirm
         systemctl enable NetworkManager
     fi
 
@@ -421,11 +421,11 @@ else
 
     if [ "\${DESKTOP_ENV}" = "kde" ]; then
         DE_PKGS="plasma konsole dolphin"
-        DESKTOP_PKGS="kitty fastfetch sddm sddm-\${INIT_SYSTEM} pipewire pipewire-\${INIT_SYSTEM} pipewire-pulse pipewire-pulse-\${INIT_SYSTEM} wireplumber wireplumber-\${INIT_SYSTEM}"
+        DESKTOP_PKGS="kitty fastfetch sddm sddm-\${INIT_SYSTEM} power-profiles-daemon power-profiles-daemon-\${INIT_SYSTEM} pipewire pipewire-\${INIT_SYSTEM} pipewire-pulse pipewire-pulse-\${INIT_SYSTEM} wireplumber wireplumber-\${INIT_SYSTEM}"
 
     elif [ "\${DESKTOP_ENV}" = "xfce" ]; then
         DE_PKGS="xorg-server xfce4 xfce4-whiskermenu-plugin xfce4-pulseaudio-plugin"
-        DESKTOP_PKGS="kitty fastfetch sddm sddm-\${INIT_SYSTEM} pipewire pipewire-\${INIT_SYSTEM} pipewire-pulse pipewire-pulse-\${INIT_SYSTEM} wireplumber wireplumber-\${INIT_SYSTEM}"
+        DESKTOP_PKGS="kitty fastfetch sddm sddm-\${INIT_SYSTEM} power-profiles-daemon power-profiles-daemon-\${INIT_SYSTEM} pipewire pipewire-\${INIT_SYSTEM} pipewire-pulse pipewire-pulse-\${INIT_SYSTEM} wireplumber wireplumber-\${INIT_SYSTEM}"
 
     else
         DE_PKGS=""
@@ -439,7 +439,7 @@ else
         turnstile turnstile-\${INIT_SYSTEM} \
         networkmanager networkmanager-\${INIT_SYSTEM} \
         dbus dbus-\${INIT_SYSTEM} \
-        vim nano sudo \
+        neovim nano sudo \
         --noconfirm
 
     case "\${INIT_SYSTEM}" in
@@ -450,6 +450,7 @@ else
             rc-update add turnstile default
             if [ "\${DESKTOP_ENV}" != "none" ]; then
                 rc-update add sddm default
+                rc-update add power-profiles-daemon default
             fi
             ;;
 
@@ -464,6 +465,7 @@ else
                [ -d "/etc/runit/sv/sddm" ] &&
                [ ! -e "/etc/runit/runsvdir/default/sddm" ]; then
                 ln -s /etc/runit/sv/sddm /etc/runit/runsvdir/default/sddm
+                ln -s /etc/runit/sv/power-profiles-daemon /etc/runit/runsvdir/default/power-profiles-daemon
             fi
             ;;
 
@@ -474,6 +476,7 @@ else
             ln -s ../turnstiled /etc/dinit.d/boot.d/
             if [ "\${DESKTOP_ENV}" != "none" ]; then
                 ln -s ../sddm /etc/dinit.d/boot.d/
+                ln -s ../power-profiles-daemon /etc/dinit.d/boot.d/
             fi
             ;;
     esac
@@ -504,6 +507,18 @@ if [ "\${USE_CACHYOS_KERNEL}" = "yes" ]; then
     pacman -Syy --noconfirm
     pacman -S --noconfirm linux-cachyos linux-cachyos-headers linux-firmware --needed
 fi
+
+# =============================================================================
+# DRIVERS
+# =============================================================================
+
+info "Installing mesa drivers for intel, amd and nouveau..."
+sudo pacman -S mesa lib32-mesa \
+  vulkan-intel lib32-vulkan-intel \
+  vulkan-radeon lib32-vulkan-radeon \
+  vulkan-nouveau lib32-vulkan-nouveau \
+  vulkan-swrast lib32-vulkan-swrast \
+  libva intel-media-driver
 
 # =============================================================================
 # GRUB
