@@ -376,7 +376,6 @@ pacman -S --noconfirm papirus-icon-theme
 mkdir -p /usr/share/icons/hicolor/scalable/apps/
 mkdir -p /usr/share/pixmaps/
 
-
 echo "\${NEW_HOSTNAME}" > /etc/hostname
 cat > /etc/hosts <<EOF
 127.0.0.1   localhost
@@ -562,11 +561,12 @@ cp neveraskmewhatthisis/config.jsonc ~/.config/fastfetch/
 mkdir -p /etc/skel/.config
 cp -r neveraskmewhatthisis/xfce4 /etc/skel/.config/
 cp -r neveraskmewhatthisis/fish /etc/skel/.config/
+cp neveraskmewhatthisis/plasma-org.kde.plasma.desktop-appletsrc /etc/skel/.config/
 git clone https://github.com/beamyyl/fastfetch
 cp -r fastfetch/* /etc/skel/.config/
 ./colorlogo.sh > /etc/skel/.config/fastfetch/logo.txt
-mkdir -p /usr/share/wallpapers/Visnux
-cp -r walls/visnux-walls/* /usr/share/wallpapers/Visnux/
+mkdir -p /usr/share/wallpapers/
+cp -r walls/visnux-walls/* /usr/share/wallpapers/
 cd ..
 rm -rf larphub
 
