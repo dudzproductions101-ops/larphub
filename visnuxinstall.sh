@@ -545,16 +545,6 @@ git clone https://github.com/realv1sta/larphub
 cp -r larphub/neveraskmewhatthisis/Office-sidebar /boot/grub/themes
 cp larphub/visnux.svg /usr/share/icons/hicolor/scalable/apps/visnux.svg
 cp larphub/visnux.png /usr/share/pixmaps/visnux.png
-
-if [ "$INIT_SYSTEM" != "systemd" ]; then
-    rm /usr/share/pixmaps/archlinux-logo.png
-    rm /usr/share/pixmaps/archlinux-logo.svg
-    rm /usr/share/pixmaps/archlinux-logo-text.svg
-    rm /usr/share/pixmaps/archlinux-logo-text-dark.svg
-else
-    rm /usr/share/pixmaps/artixlinux-logo.png
-fi
-
 mkdir -p ~/.config/fastfetch
 chmod +x larphub/colorlogo.sh && cd larphub/ && ./colorlogo.sh > ~/.config/fastfetch/logo.txt
 cp neveraskmewhatthisis/config.jsonc ~/.config/fastfetch/
