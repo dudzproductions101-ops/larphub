@@ -1,0 +1,14 @@
+{
+    "KPackageStructure": "Plasma/Wallpaper",
+    "KPlugin": {
+        "Authors": [
+            {
+                "Name": "Beamy"
+            }
+        ],
+        "Id": "Visnux",
+        "License": "GPL",
+        "Name": "Visnux"
+    }
+}
+
