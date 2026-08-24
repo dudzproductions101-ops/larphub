@@ -545,7 +545,7 @@ sed -i 's/GRUB_DISTRIBUTOR="Artix"/GRUB_DISTRIBUTOR="Visnux"/' /etc/default/grub
 git clone https://github.com/realv1sta/larphub
 cp -r larphub/neveraskmewhatthisis/Office-sidebar /boot/grub/themes
 cp larphub/visnux.svg /usr/share/icons/hicolor/scalable/apps/visnux.svg
-cp larphub/visnux.svg /usr/share/pixmaps/visnux.svg
+cp larphub/visnux.png /usr/share/pixmaps/visnux.png
 
 if [ "$INIT_SYSTEM" != "systemd" ]; then
     rm /usr/share/pixmaps/archlinux-logo.png
