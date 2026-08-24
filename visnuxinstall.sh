@@ -462,25 +462,25 @@ else
             mkdir -p /etc/runit/runsvdir/default
             for service in dbus elogind NetworkManager turnstiled; do
                 if [ -d "/etc/runit/sv/\${service}" ] && [ ! -e "/etc/runit/runsvdir/default/\${service}" ]; then
-                    ln -s "/etc/runit/sv/\${service}" "/etc/runit/runsvdir/default/\${service}"
+                    ln -sf "/etc/runit/sv/\${service}" "/etc/runit/runsvdir/default/\${service}"
                 fi
             done
             if [ "\${DESKTOP_ENV}" != "none" ] &&
                [ -d "/etc/runit/sv/sddm" ] &&
                [ ! -e "/etc/runit/runsvdir/default/sddm" ]; then
-                ln -s /etc/runit/sv/sddm /etc/runit/runsvdir/default/sddm
-                ln -s /etc/runit/sv/power-profiles-daemon /etc/runit/runsvdir/default/power-profiles-daemon
+                ln -sf /etc/runit/sv/sddm /etc/runit/runsvdir/default/sddm
+                ln -sf /etc/runit/sv/power-profiles-daemon /etc/runit/runsvdir/default/power-profiles-daemon
             fi
             ;;
 
         dinit)
-            ln -s ../dbus /etc/dinit.d/boot.d/
-            ln -s ../elogind /etc/dinit.d/boot.d/
-            ln -s ../NetworkManager /etc/dinit.d/boot.d/
-            ln -s ../turnstiled /etc/dinit.d/boot.d/
+            ln -sf ../dbus /etc/dinit.d/boot.d/
+            ln -sf ../elogind /etc/dinit.d/boot.d/
+            ln -sf ../NetworkManager /etc/dinit.d/boot.d/
+            ln -sf ../turnstiled /etc/dinit.d/boot.d/
             if [ "\${DESKTOP_ENV}" != "none" ]; then
-                ln -s ../sddm /etc/dinit.d/boot.d/
-                ln -s ../power-profiles-daemon /etc/dinit.d/boot.d/
+                ln -sf ../sddm /etc/dinit.d/boot.d/
+                ln -sf ../power-profiles-daemon /etc/dinit.d/boot.d/
             fi
             ;;
     esac
