@@ -559,6 +559,8 @@ fi
 mkdir -p ~/.config/fastfetch
 chmod +x larphub/colorlogo.sh && cd larphub/ && ./colorlogo.sh > ~/.config/fastfetch/logo.txt
 cp neveraskmewhatthisis/config.jsonc ~/.config/fastfetch/
+mkdir -p /etc/skel/.config
+cp -r neveraskmewhatthisis/xfce4 /etc/skel/.config/
 cd ..
 rm -rf larphub
 
