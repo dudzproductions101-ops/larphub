@@ -339,19 +339,23 @@
     <!-- UEFI Tab -->
     <div id="uefi" class="tab-content active">
         <p>If you're on UEFI, make sure you booted into UEFI mode. Format your partitions and mount them up like this:</p>
-        <pre><code>mkfs.fat -F32 /dev/efi_system_partition
-mkfs.ext4 /dev/root_partition
-mount /dev/root_partition /mnt
-mkdir -p /mnt/boot
-mount /dev/efi_system_partition /mnt/boot</code></pre>
+        <pre><code>cfdisk /dev/DISK
+(1 GB EFI Partition + one full Linux Filesystem)
+mkfs.fat -F 32 /dev/part
+mkfs.ext4 /dev/part
+mount /dev/part /mnt
+mount /dev/efipart /mnt/boot/efi --mkdir
+        </code></pre>
     </div>
 
     <!-- BIOS Tab -->
     <div id="bios" class="tab-content">
         <p>Running legacy BIOS? Keep it simple with a standard MBR layout, format it to ext4, and mount it:</p>
-        <pre><code>fdisk /dev/sdX
-mkfs.ext4 /dev/sdX1
-mount /dev/sdX1 /mnt</code></pre>
+        <pre><code>cfdisk /dev/disk 
+(choose DOS and make the partition bootable, or choose GPT and make a 1mb Bios BOOT (left unformatted) + root)
+mkfs.ext4 /dev/part
+mount /dev/part /mnt
+<@1142074070188429442></code></pre>
     </div>
 
     <h2 id="install-visnux">4. Install Visnux</h2>
