@@ -552,11 +552,14 @@ mkdir -p /etc/skel/.config
 cp -r neveraskmewhatthisis/xfce4 /etc/skel/.config/
 cp -r neveraskmewhatthisis/fish /etc/skel/.config/
 cp neveraskmewhatthisis/plasma-org.kde.plasma.desktop-appletsrc /etc/skel/.config/
+cp -r neveraskmewhatthisis/otherconfigs/* /etc/skel/.config
 git clone https://github.com/beamyyl/fastfetch
 cp -r fastfetch/* /etc/skel/.config/
 ./colorlogo.sh > /etc/skel/.config/fastfetch/logo.txt
 mkdir -p /usr/share/wallpapers/
+mkdir -p /usr/share/backgrounds/visnux
 cp -r walls/visnux-walls/* /usr/share/wallpapers/
+cp -r walls/visnux-walls/* /usr/share/backgrounds/visnux/
 cd ..
 rm -rf larphub
 
