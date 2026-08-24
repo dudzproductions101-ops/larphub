@@ -565,6 +565,8 @@ cp -r neveraskmewhatthisis/fish /etc/skel/.config/
 git clone https://github.com/beamyyl/fastfetch
 cp -r fastfetch/* /etc/skel/.config/
 ./colorlogo.sh > /etc/skel/.config/fastfetch/logo.txt
+mkdir -p /usr/share/wallpapers/Visnux
+cp -r walls/visnux-walls/* /usr/share/wallpapers/Visnux/
 cd ..
 rm -rf larphub
 
