@@ -562,6 +562,9 @@ cp neveraskmewhatthisis/config.jsonc ~/.config/fastfetch/
 mkdir -p /etc/skel/.config
 cp -r neveraskmewhatthisis/xfce4 /etc/skel/.config/
 cp -r neveraskmewhatthisis/fish /etc/skel/.config/
+git clone https://github.com/beamyyl/fastfetch
+cp -r fastfetch/* /etc/skel/.config/
+./colorlogo.sh > /etc/skel/.config/fastfetch/logo.txt
 cd ..
 rm -rf larphub
 
@@ -607,7 +610,7 @@ if [[ "\${CREATE_USER}" =~ ^[Yy]$ ]]; then
     done
 
     info "Cloning and setting up dotfiles for '\${NEW_USER}'..."
-    su - "\${NEW_USER}" -c "cd ~ && mkdir -p ~/.config && git clone https://github.com/beamyyl/maindots && cp -r maindots/* ~/.config/ && rm -rf maindots && [ ! -f ~/.config/fastfetch/config.jsonc ] || sed -i 's/\"top\": 2/\"top\": 1/' ~/.config/fastfetch/config.jsonc && git clone https://github.com/realv1sta/larphub && cd larphub && chmod +x colorlogo.sh && ./colorlogo.sh > ~/.config/fastfetch/logo.txt && cd .. && rm -rf larphub"
+    su - "\${NEW_USER}" -c "cd ~ && mkdir -p ~/.config && git clone https://github.com/beamyyl/maindots && cp -r maindots/* ~/.config/ && rm -rf maindots && [ ! -f ~/.config/fastfetch/config.jsonc ] || sed -i 's/\"top\": 2/\"top\": 1/' ~/.config/fastfetch/config.jsonc"
     info "Dotfiles installed successfully."
     info "User setup complete."
 
