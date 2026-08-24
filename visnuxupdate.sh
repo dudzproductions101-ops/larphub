@@ -1,5 +1,10 @@
 #!/bin/bash
 
+# made by king dudas the THIRD (The SECOND disciple)
+# Beamy pls go see if this work
+# i cant test this in vm idk why
+# ily daddy
+
 red='\033[0;31m'
 green='\033[0;32m'
 yellow='\033[1;33m'
