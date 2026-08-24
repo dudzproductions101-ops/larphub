@@ -406,7 +406,7 @@ echo "LANG=en_US.UTF-8" > /etc/locale.conf
 if [ "\${INIT_SYSTEM}" = "systemd" ]; then
 
     if [ "\${DESKTOP_ENV}" = "kde" ]; then
-        pacman -S plasma konsole dolphin wl-clipboard kitty fastfetch sddm networkmanager neovim nano sudo power-profiles-daemon --noconfirm
+        pacman -S plasma konsole dolphin xdg-desktop-portal-kde wl-clipboard kitty fastfetch sddm networkmanager neovim nano sudo power-profiles-daemon --noconfirm
         systemctl enable NetworkManager
         systemctl enable sddm --force
 
@@ -425,7 +425,7 @@ else
 
     if [ "\${DESKTOP_ENV}" = "kde" ]; then
         DE_PKGS="plasma konsole dolphin"
-        DESKTOP_PKGS="kitty fastfetch wl-clipboard sddm sddm-\${INIT_SYSTEM} power-profiles-daemon power-profiles-daemon-\${INIT_SYSTEM} pipewire pipewire-\${INIT_SYSTEM} pipewire-pulse pipewire-pulse-\${INIT_SYSTEM} wireplumber wireplumber-\${INIT_SYSTEM}"
+        DESKTOP_PKGS="kitty xdg-desktop-portal-kde fastfetch wl-clipboard sddm sddm-\${INIT_SYSTEM} power-profiles-daemon power-profiles-daemon-\${INIT_SYSTEM} pipewire pipewire-\${INIT_SYSTEM} pipewire-pulse pipewire-pulse-\${INIT_SYSTEM} wireplumber wireplumber-\${INIT_SYSTEM}"
 
     elif [ "\${DESKTOP_ENV}" = "xfce" ]; then
         DE_PKGS="xorg-server xfce4 xfce4-whiskermenu-plugin xfce4-pulseaudio-plugin"
