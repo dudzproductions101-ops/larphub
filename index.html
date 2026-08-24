@@ -344,8 +344,7 @@
 mkfs.fat -F 32 /dev/part
 mkfs.ext4 /dev/part
 mount /dev/part /mnt
-mount /dev/efipart /mnt/boot/efi --mkdir
-        </code></pre>
+mount /dev/efipart /mnt/boot/efi --mkdir</code></pre>
     </div>
 
     <!-- BIOS Tab -->
@@ -354,8 +353,7 @@ mount /dev/efipart /mnt/boot/efi --mkdir
         <pre><code>cfdisk /dev/disk 
 (choose DOS and make the partition bootable, or choose GPT and make a 1mb Bios BOOT (left unformatted) + root)
 mkfs.ext4 /dev/part
-mount /dev/part /mnt
-        </code></pre>
+mount /dev/part /mnt</code></pre>
     </div>
 
     <h2 id="install-visnux">4. Install Visnux</h2>
